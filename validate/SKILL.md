@@ -25,9 +25,9 @@ the fastest proof point for broader adoption.
 ## 5c. Ship it
 
 Surface the validated agent where the business already works:
-- **Snowflake Intelligence (CoWork)** — business users chat with the agent directly.
-- **Cortex Code** — scaffold a lightweight app around the agent if a custom UI is
-  wanted.
+- **CoWork** — business users chat with the agent directly.
+- **Streamlit app, App Runtime app, or Dashboard (Private Preview)** — offered next in **Step 6**
+  (`app/SKILL.md`); the customer picks one first.
 
 ## 5d. Then — and only then — expand
 
@@ -40,8 +40,10 @@ dashboard. Resist widening scope before the first proof point lands.
 
 - Agent answers the baseline questions with numbers matching the dashboard.
 - VQRs added for the baseline questions and known edge cases.
-- Agent surfaced in Snowflake Intelligence (or an app), with a named owner.
+- Agent surfaced in CoWork (or an app), with a named owner.
 - A clear "next dashboard" candidate identified for the second iteration.
+- Then proceed to **Step 6** (`app/SKILL.md`), which asks the customer what to
+  build (or to skip) before building anything.
 
 ## Optional follow-ups
 

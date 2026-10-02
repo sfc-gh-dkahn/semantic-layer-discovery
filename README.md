@@ -15,6 +15,8 @@ or Tableau.
   workbook; if not, it builds from scratch with **Autopilot**.
 - Wires a **Cortex Agent** to the certified view and **validates** it against the
   original dashboard, then ships it.
+- **Builds a front end** over the validated view and agent — the customer picks a
+  Streamlit app, App Runtime app, or Dashboard in CoWork (PrPr).
 - Delegates the heavy lifting (import/build) to the installed **`agent-studio`**
   skill — this skill orchestrates *when* and *what*, not the mechanics.
 
@@ -32,7 +34,7 @@ enable a semantic layer.*
 
 ---
 
-## The five-step path
+## The six-step path
 
 | Step | What happens | File |
 |---|---|---|
@@ -44,6 +46,7 @@ enable a semantic layer.*
 | 3b | Has neither → **Autopilot** from metadata | `build/autopilot.md` |
 | 4 | Wire a **Cortex Agent** on the certified view | `agent/SKILL.md` |
 | 5 | **Validate** vs baseline, add Verified Queries, ship | `validate/SKILL.md` |
+| 6 | **Ask** what to build — **Streamlit app**, **App Runtime app**, or **Dashboard** (Private Preview) — then build it | `app/SKILL.md` |
 
 ### The one decision point (Step 3)
 
@@ -79,9 +82,11 @@ prefer import when a BI tool exists.
 
 - The agent answers the baseline dashboard's questions with **matching numbers**.
 - Verified Queries added for those questions and known edge cases.
-- Agent surfaced in **Snowflake Intelligence** (or an app via Cortex Code), with a
+- Agent surfaced in **CoWork** (or an app via Cortex Code), with a
   named owner.
 - A "next dashboard" candidate identified for iteration 2.
+- If the customer opted in: a deployed **Streamlit app**, **App Runtime app**, or
+  **Dashboard** (Private Preview) showing the baseline KPIs, shared with the customer's role(s).
 
 ---
 
@@ -100,7 +105,15 @@ request matches the triggers above.
 
 - The installed **`agent-studio`** skill (for import/build mechanics).
 - For Step 4, the **`agent-studio`** skill (agent creation).
-- No Python or scripts — this is a pure orchestration skill.
+- For Step 6, the skill for the chosen option and surface:
+
+  | Option | Desktop / CLI | Snowsight |
+  |---|---|---|
+  | Streamlit app | `developing-with-streamlit-in-snowflake` | `streamlit-in-workspaces` |
+  | App Runtime app | `snowflake-apps` + `sar-actions-desktop` | `snowflake-apps` + `sar-actions-workspaces` |
+  | Dashboard (Private Preview) | Check for a CoWork Dashboard skill; if none, build in Snowsight Cortex Code | `dashboard` |
+
+- No bundled scripts — the front end is generated per customer at run time.
 
 ## File map
 
@@ -114,5 +127,6 @@ semantic-layer-discovery/
 │   ├── import.md        Power BI / Tableau import path (+ identity callout)
 │   └── autopilot.md     from-scratch / Autopilot path
 ├── agent/SKILL.md       Step 4
-└── validate/SKILL.md    Step 5
+├── validate/SKILL.md    Step 5
+└── app/SKILL.md         Step 6 (Streamlit / App Runtime / Dashboard)
 ```

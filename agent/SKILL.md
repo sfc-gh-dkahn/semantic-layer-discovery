@@ -30,10 +30,13 @@ a data model into an **agentic BI experience** the business can talk to.
 For customer- or public-facing assistants, consider attaching **Cortex Guardrails**
 so responses stay safe, neutral, and on-topic before they reach an end user.
 
-## Delegation
+## Delegation (REQUIRED — actually create the agent)
 
-For agent creation/versioning mechanics, use the **`agent-studio`** skill. This
-skill just sequences *when* to do it and *what* to wire in.
+You **MUST** invoke the **`agent-studio`** skill to create a
+real Cortex Agent object grounded on the certified Semantic View — not describe
+how one would be created. This skill sequences *when* to do it and *what* to wire
+in; the agent object must actually be created and confirmed to exist before Step
+5.
 
 ## Exit criteria
 
