@@ -1,6 +1,6 @@
 ---
 name: semantic-layer-discovery
-description: "Guide a customer end-to-end through evaluating and standing up a governed, agentic BI experience on Snowflake, following the 'Quick to Evaluate, Even Quicker to Production' path. Use when a user wants to: run semantic-layer discovery, walk a customer through building a semantic layer/semantic view, replace or modernize an existing dashboard/report with a Cortex Agent, or decide whether to import Power BI/Tableau vs. build from scratch. Runs discovery questions, then branches at the Create-Semantic-View step: if the customer HAS Power BI or Tableau it routes to import; if they have NEITHER it routes to Autopilot/build-from-scratch. Delegates the actual semantic-view import/build mechanics to the 'agent-studio' skill."
+description: "Guide a customer end-to-end through evaluating and standing up a governed, agentic BI experience on Snowflake, following the 'Quick to Evaluate, Even Quicker to Production' path. Use when a user wants to: run semantic-layer discovery, walk a customer through building a semantic layer/semantic view, replace or modernize an existing dashboard/report with a Cortex Agent, or decide whether to import Power BI/Tableau vs. build from scratch. Ends by building the customer's choice of front end (Streamlit app, App Runtime app, or Dashboard in CoWork (PrPr)) over the validated semantic view and agent. Runs discovery questions, then branches at the Create-Semantic-View step: if the customer HAS Power BI or Tableau it routes to import; if they have NEITHER it routes to Autopilot/build-from-scratch. Delegates the actual semantic-view import/build mechanics to the 'agent-studio' skill."
 ---
 
 # Semantic Layer Discovery
@@ -23,7 +23,7 @@ the five-step "Path Forward" and, for the mechanical work of creating the semant
 view (importing Power BI/Tableau or building from metadata), it hands off to the
 existing **`agent-studio`** skill.
 
-## The Path Forward — five steps (plus an optional pre-step)
+## The Path Forward — six steps (plus an optional pre-step)
 
 ```
 Step 0 (optional, Cortex Sense — Public Preview Nov 2026)
@@ -38,6 +38,7 @@ Step 3  Create the Semantic View                            -> build/SKILL.md
           └─ has NEITHER             -> build/autopilot.md
 Step 4  Create a Cortex Agent on the certified view         -> agent/SKILL.md
 Step 5  Validate against the baseline, add VQRs, ship        -> validate/SKILL.md
+Step 6  (opt-in) ASK: Streamlit app, App Runtime app, or Dashboard (PrPr) -> app/SKILL.md
 ```
 
 ## The routing rule (the one decision point)
@@ -54,6 +55,29 @@ At **Step 3**, ask the customer directly (use the ask_user_question tool):
 Importing carries **DAX measures, relationships, and calculations directly in**,
 so if the customer has a BI tool, prefer import — it reflects already-validated
 business definitions and is faster than starting cold.
+
+## Deliverables — Definition of Done (this is a SETUP skill, not just discovery)
+
+This skill is not complete until **real Snowflake objects exist**. Discovery
+(Steps 1-2) is only the front half; the run is done only when ALL of these are
+true:
+
+1. A **Semantic View object exists** in Snowflake (created via import or
+   Autopilot in Step 3) — verifiable with `SHOW SEMANTIC VIEWS` / `DESCRIBE
+   SEMANTIC VIEW`.
+2. A **Cortex Agent exists** and is wired to that certified view (Step 4).
+3. The agent has been **validated** against the baseline dashboard's questions
+   and **surfaced** (CoWork or an app), with Verified Queries
+   added (Step 5).
+4. The customer was **asked what to build** (Streamlit app, App Runtime app,
+   Dashboard (Private Preview), or not now). If they chose one, it **exists** and shows the
+   baseline KPIs from the Semantic View (plus an agent chat for the two app
+   options), with access granted to the customer's role(s) (Step 6). If not,
+   record that it was declined.
+
+If you finish the conversation without creating these objects, the skill has
+**failed** — you produced discovery notes, not a semantic layer. Do not stop at
+Step 2.
 
 ## How to run this skill
 
@@ -75,9 +99,12 @@ sequentially — not as a checklist to present all at once.
 
 1. Read `discovery/SKILL.md` and run Steps 1-2 with the customer, one question at a time.
 2. At Step 3, apply the routing rule above and read `build/SKILL.md`.
-3. Continue through `agent/SKILL.md` (Step 4) and `validate/SKILL.md` (Step 5).
+3. Continue through `agent/SKILL.md` (Step 4), `validate/SKILL.md` (Step 5), and
+   `app/SKILL.md` (Step 6).
 4. For the actual semantic-view import or build, delegate to the `agent-studio`
    skill (its `import_tableau`, `import_powerbi`, and `creation` workflows).
+5. For the Step 6 build, delegate to the skill for the chosen option and the
+   user's surface (Desktop/CLI vs Snowsight) — see the table in `app/SKILL.md`.
 
 ## Guiding principle
 

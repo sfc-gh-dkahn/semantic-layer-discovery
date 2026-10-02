@@ -34,11 +34,16 @@ Both paths produce a **Semantic View** (GA). Once it exists:
 
 Then proceed to `agent/SKILL.md` (Step 4).
 
-## Delegation
+## Delegation (REQUIRED — actually create the object, do not narrate)
 
-For the actual conversion/build mechanics, hand off to the **`agent-studio`**
-skill:
+You **MUST** invoke the **`agent-studio`** skill and let it run the real
+creation — this step produces an actual Semantic View object in Snowflake, not a
+description of how one would be made:
 - Power BI / Tableau import → its `import_powerbi` / `import_tableau` workflows.
 - Build from metadata → its `creation` workflow (Autopilot / fastgen).
 
-This skill orchestrates; `agent-studio` does the heavy lifting.
+Do **not** treat Step 3 as complete until a Semantic View object exists and you
+have confirmed it (e.g. `SHOW SEMANTIC VIEWS` / `DESCRIBE SEMANTIC VIEW`).
+Explaining the steps without invoking the sub-skill and creating the object is a
+failure of this step. This skill orchestrates; `agent-studio` does the heavy
+lifting — but the object must actually get built here.
