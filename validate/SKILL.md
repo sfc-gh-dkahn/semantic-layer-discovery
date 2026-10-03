@@ -1,6 +1,6 @@
 # Step 5 — Validate, iterate, and ship
 
-Prove the agent against the **original baseline dashboard** from Step 1, harden it
+Prove the agent against the **original baseline dashboard** from Step 2, harden it
 with Verified Queries, then surface it where users work. One dashboard replaced is
 the fastest proof point for broader adoption.
 
@@ -8,10 +8,11 @@ the fastest proof point for broader adoption.
 
 ## 5a. Validate against the baseline
 
-- Take the **3-5 questions** the baseline dashboard answers (Step 2b) and ask the
+- Write one question per worksheet (Tableau) or visual (Power BI) from its title,
+  fields, and `usage_context` filters, plus one per dropped metric, and ask the
   agent each one.
 - Compare the agent's numbers to the dashboard's. They should match.
-- For any mismatch, trace it: usually a metric definition (Step 2c), a fact-grain
+- For any mismatch, trace it: usually a metric definition, a fact-grain
   issue, or a missing filter in the Semantic View. Fix in the view, re-test.
 
 ## 5b. Add Verified Queries for edge cases

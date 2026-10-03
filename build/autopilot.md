@@ -8,11 +8,11 @@ structure, then refine it with the definitions captured in Step 2.
 
 ## Inputs (all from discovery)
 
-- The **source-of-truth tables/views** for the baseline dashboard (Step 2a).
-- Join keys and fact **grain** (Step 2a).
-- The **3-5 questions** the dashboard answers (Step 2b) — these become Verified
+- The **source-of-truth tables/views**: search for them first (`snowflake_object_search`,
+  `snowflake_semantic_view_search`, busiest tables in query history), then
+  confirm the picks and target schema in one pre-filled question.
+- The top queries on those tables in query history — these become Verified
   Queries later.
-- The **precise metric definitions** and canonical owners (Step 2c).
 
 ## How to run it
 
@@ -21,11 +21,11 @@ Delegate the build to the **`agent-studio`** skill's **`creation`** workflow:
    (relationships, candidate metrics, dimensions, descriptions).
 2. Refine the proposal against Step 2:
    - Correct/confirm relationships and fact grain.
-   - Encode each key metric with its exact Step 2c formula.
+   - Encode each key metric with the formula used in query history.
    - Add non-additive metrics carefully (ratios, distinct counts, averages).
    - Add named filters for the standing filters and common drill-downs.
    - Add descriptions + synonyms so Cortex Analyst maps business language.
-3. Turn the Step 2b questions into **Verified Queries (VQRs)** — this seeds
+3. Turn those top queries into **Verified Queries (VQRs)** — this seeds
    accuracy and is validated in Step 5.
 
 ## Why questions-first matters
