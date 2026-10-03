@@ -12,7 +12,7 @@ but *how* you create it depends on the file from Step 2.
 |---|---|---|
 | **Power BI** (`.pbit` / `.pbix`) | `02-build/import.md` → Power BI path | DAX measures, relationships, calcs carry directly in |
 | **Tableau** (`.twb` / `.twbx` / `.tds` / `.tdsx`) | `02-build/import.md` → Tableau path | Datasource joins, calcs, and fields carry in |
-| **`none`** | `02-build/autopilot.md` | Build fresh from Snowflake metadata via Autopilot |
+| **Screenshots (any other BI tool) or `none`** | `02-build/autopilot.md` | Build fresh from Snowflake metadata via Autopilot |
 
 **Prefer import when a BI tool exists.** The workbook already encodes
 business-validated definitions, so importing is faster and more trustworthy than

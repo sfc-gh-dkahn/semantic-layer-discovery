@@ -45,7 +45,7 @@ enable a semantic layer.*
 | 2 | **Upload + stage** the file (`COPY FILES` or `PUT`), **analyze** it (`tableau_analyze` / `pbi_analyze`), confirm tabs + schema | `01-intake/SKILL.md` |
 | 3 | **Create the Semantic View** — the branch point | `02-build/SKILL.md` |
 | 3a | Has Power BI/Tableau → **import** the workbook | `02-build/import.md` |
-| 3b | No file (`none`) → **Autopilot** from metadata | `02-build/autopilot.md` |
+| 3b | Screenshots (any other BI tool) or `none` → **Autopilot** from metadata | `02-build/autopilot.md` |
 | 4 | Wire a **Cortex Agent** on the certified view | `03-agent/SKILL.md` |
 | 5 | **Validate** vs baseline, add Verified Queries, ship | `04-validate/SKILL.md` |
 | 6 | **Ask** what to build — **Streamlit app**, **App Runtime app**, or **Dashboard** (Private Preview) — then build it | `05-app/SKILL.md` |
@@ -53,7 +53,7 @@ enable a semantic layer.*
 ### The one decision point (Step 3) — the file decides, no question
 
 - **Power BI** (`.pbit`/`.pbix`) or **Tableau** (`.twb`/`.twbx`/`.tds`/`.tdsx`) → import path
-- **`none`** → Autopilot / build-from-metadata path
+- **Screenshots (any other BI tool) or `none`** → Autopilot / build-from-metadata path
 
 Importing carries DAX measures, relationships, and calculations directly in, so
 prefer import when a BI tool exists.

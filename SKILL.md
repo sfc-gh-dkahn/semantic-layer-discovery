@@ -36,7 +36,7 @@ Step 2  Upload + stage the file, analyze it with agent-studio's
         Tableau / Power BI tools, confirm tabs + schema      -> 01-intake/SKILL.md
 Step 3  Create the Semantic View                            -> 02-build/SKILL.md
           ├─ HAS a Power BI / Tableau file -> 02-build/import.md
-          └─ answered `none`               -> 02-build/autopilot.md
+          └─ screenshots or `none`       -> 02-build/autopilot.md
 Step 4  Create a Cortex Agent on the certified view         -> 03-agent/SKILL.md
 Step 5  Validate against the baseline, add VQRs, ship        -> 04-validate/SKILL.md
 Step 6  (opt-in) ASK: Streamlit app, App Runtime app, or Dashboard (PrPr) -> 05-app/SKILL.md
@@ -49,7 +49,7 @@ Tableau?":
 
 - **Power BI** (`.pbit` / `.pbix`) -> `02-build/import.md` (Power BI path)
 - **Tableau** (`.twb` / `.twbx` / `.tds` / `.tdsx`) -> `02-build/import.md` (Tableau path)
-- **`none`** -> `02-build/autopilot.md` (build from metadata / Autopilot)
+- **Screenshots (any other BI tool) or `none`** -> `02-build/autopilot.md` (build from metadata / Autopilot)
 
 Importing carries **DAX measures, relationships, and calculations directly in**,
 so if the customer has a BI tool, prefer import — it reflects already-validated

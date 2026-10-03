@@ -14,9 +14,9 @@ the fastest proof point for broader adoption.
 - Compare the agent's numbers to the dashboard's. They should match.
 - For any mismatch, trace it: usually a metric definition, a fact-grain
   issue, or a missing filter in the Semantic View. Fix in the view, re-test.
-- **No file (Autopilot path):** there is no dashboard, so check against the top
-  queries from query history instead: ask the agent each one's question and
-  match the numbers that query returns.
+- **No file (Autopilot path):** with screenshots, ask one question per chart
+  with the filters and date range shown, and match the numbers on screen. No
+  screenshots: check against the top queries from query history instead.
 
 ## 5b. Add Verified Queries for edge cases
 

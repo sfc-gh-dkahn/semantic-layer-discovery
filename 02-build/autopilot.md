@@ -8,10 +8,17 @@ structure, then refine it with the definitions captured in Step 2.
 
 ## Inputs (all from discovery)
 
-- The **source-of-truth tables/views**: search for them first (`snowflake_object_search`,
+- **Dashboard screenshots**, if pasted (Domo, Hex, any BI tool). Read the KPI
+  names, chart titles, grouping fields, filters, date range, and the numbers
+  shown. These set the view's scope, become the agent's questions, and are the
+  baseline for Step 5.
+
+- The **source-of-truth tables/views**: search for them first, using the KPI and field names from the
+  screenshots if any (`snowflake_object_search`,
   `snowflake_semantic_view_search`, busiest tables in query history), then
   confirm the picks and target schema in one pre-filled question.
-- The top queries on those tables in query history — these become Verified
+- The top queries on those tables in query history (including the BI tool's
+  service user, if it queries Snowflake live) — these become Verified
   Queries later.
 
 ## How to run it

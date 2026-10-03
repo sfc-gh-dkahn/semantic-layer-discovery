@@ -37,10 +37,10 @@ echo "surface=${CORTEX_CODE_CLIENT_SURFACE:-unknown} os=$(uname -s)"; test -d /w
 
 | Surface | Ask |
 |---|---|
-| Desktop / CLI | "Path to your Tableau or Power BI file? (or `none`)" |
-| Snowsight | "Upload your Tableau or Power BI file into this workspace, then say `done`. (or `none`)" |
+| Desktop / CLI | "Path to your Tableau or Power BI file? Using another BI tool (Domo, Hex, ...)? Paste dashboard screenshots instead. (or `none`)" |
+| Snowsight | "Upload your Tableau or Power BI file into this workspace, then say `done`. Using another BI tool (Domo, Hex, ...)? Paste dashboard screenshots instead. (or `none`)" |
 
-- `none` -> skip to `02-build/autopilot.md`.
+- Screenshots or `none` -> skip to `02-build/autopilot.md`.
 - Snowsight: find the file yourself (`find /workspace -maxdepth 4 -type f \( -iname '*.twb*' -o -iname '*.tds*' -o -iname '*.pbi[tx]' \) -mmin -60`).
 - One dashboard only — do not bulk-import the BI estate.
 - File name has `[` or `]`: stage downloads fail. Rename it (Desktop) or ask the
@@ -102,7 +102,7 @@ schema). Put one line above it with what you found.
 ## Exit criteria for discovery
 
 Before moving to Step 3, you should have:
-- One staged baseline file (or `none`).
+- One staged baseline file (or screenshots, or `none`).
 - Its analyze result: tabs/tables, source tables, any fixes made.
 - The confirmed tabs and target schema.
 
