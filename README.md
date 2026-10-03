@@ -41,7 +41,8 @@ enable a semantic layer.*
 | Step | What happens | File |
 |---|---|---|
 | 0 (optional) | Run **Cortex Sense** (PuPr Nov 2026) to surface naming conflicts, metric gaps, coverage | `01-intake/SKILL.md` |
-| 1–2 | **Upload + stage** the file (the skill picks the right upload tool for Snowsight or Desktop/CLI), **analyze** it (`tableau_analyze` / `pbi_analyze`), confirm tabs + schema | `01-intake/SKILL.md` |
+| 1 | Choose **ONE** existing dashboard as the baseline: **upload its file** (or screenshots from any other BI tool); the skill stages it with the right tool for Snowsight or Desktop/CLI | `01-intake/SKILL.md` |
+| 2 | Map data objects, questions, and business definitions: **analyze** the file (`tableau_analyze` / `pbi_analyze`), confirm tabs + schema | `01-intake/SKILL.md` |
 | 3 | **Create the Semantic View** — the branch point | `02-build/SKILL.md` |
 | 3a | Has Power BI/Tableau → **import** the workbook | `02-build/import.md` |
 | 3b | Screenshots (any other BI tool) or `none` → **Autopilot** from metadata | `02-build/autopilot.md` |

@@ -2,11 +2,11 @@
 
 This is the one decision point in the whole workflow. Model the tables,
 relationships, metrics, and descriptions from Step 2 into a **Semantic View** —
-but *how* you create it depends on the file from Step 2.
+but *how* you create it depends on the file from Step 1.
 
 ---
 
-## The route (no question — the Step 2 file decides)
+## The route (no question — the Step 1 file decides)
 
 | File | Route to | Why |
 |---|---|---|
@@ -16,7 +16,7 @@ but *how* you create it depends on the file from Step 2.
 
 **Prefer import when a BI tool exists.** The workbook already encodes
 business-validated definitions, so importing is faster and more trustworthy than
-rebuilding from scratch — and it maps directly to the baseline file from Step 2.
+rebuilding from scratch — and it maps directly to the baseline you chose in Step 1.
 
 ---
 

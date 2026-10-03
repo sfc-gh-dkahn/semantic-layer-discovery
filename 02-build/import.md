@@ -7,7 +7,7 @@ validated, and you land far closer to a working view than building from scratch.
 
 ---
 
-## Inputs (all from Step 2)
+## Inputs (all from Steps 1-2)
 
 The file is already staged and analyzed: stage path, analyze result, confirmed
 tabs/tables, and target `DATABASE.SCHEMA`. Don't ask for them again.

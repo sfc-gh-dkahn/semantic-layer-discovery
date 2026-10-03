@@ -1,6 +1,6 @@
 # Step 5 — Validate, iterate, and ship
 
-Prove the agent against the **original baseline dashboard** from Step 2, harden it
+Prove the agent against the **original baseline dashboard** from Step 1, harden it
 with Verified Queries, then surface it where users work. One dashboard replaced is
 the fastest proof point for broader adoption.
 

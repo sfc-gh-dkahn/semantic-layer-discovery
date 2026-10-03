@@ -31,9 +31,11 @@ Step 0 (optional, Cortex Sense — Public Preview Nov 2026)
   issues from Snowflake metadata, query history, dbt, Tableau, and Power BI —
   BEFORE building Semantic Views.
 
-Step 1  Detect the surface (Snowsight vs Desktop/CLI)     -> 01-intake/SKILL.md
-Step 2  Upload + stage the file, analyze it with agent-studio's
-        Tableau / Power BI tools, confirm tabs + schema      -> 01-intake/SKILL.md
+Step 1  Choose ONE existing dashboard: upload its file     -> 01-intake/SKILL.md
+        (or screenshots); staged with the right tool for
+        Snowsight or Desktop/CLI
+Step 2  Map data objects, questions, business definitions:
+        agent-studio's Tableau / Power BI tools read the file -> 01-intake/SKILL.md
 Step 3  Create the Semantic View                            -> 02-build/SKILL.md
           ├─ HAS a Power BI / Tableau file -> 02-build/import.md
           └─ screenshots or `none`       -> 02-build/autopilot.md
@@ -44,7 +46,7 @@ Step 6  (opt-in) ASK: Streamlit app, App Runtime app, or Dashboard (PrPr) -> 05-
 
 ## The routing rule (no question)
 
-The file from **Step 2** decides the route — don't ask "Do you have Power BI or
+The file from **Step 1** decides the route — don't ask "Do you have Power BI or
 Tableau?":
 
 - **Power BI** (`.pbit` / `.pbix`) -> `02-build/import.md` (Power BI path)
@@ -83,7 +85,7 @@ Step 2.
 ### Interaction rule (REQUIRED) — fewest touches
 
 The file answers most questions, so don't ask them. You MUST:
-- Ask only for the file (Step 2), one pre-filled confirm (tabs + schema), and the
+- Ask only for the file (Step 1), one pre-filled confirm (tabs + schema), and the
   Step 6 build choice. Anything else is a **fix**, asked only when something is
   wrong.
 - Never ask for business context, metric definitions, consumers, or "do you
@@ -92,7 +94,7 @@ The file answers most questions, so don't ask them. You MUST:
   ask_user_question call, with every answer pre-filled.
 - Pass every value into agent-studio's tools yourself so it never stops to ask.
 
-1. Read `01-intake/SKILL.md` and run Steps 1-2: detect the surface, then get,
+1. Read `01-intake/SKILL.md` and run Steps 1-2: get,
    stage, and analyze the file.
 2. At Step 3, apply the routing rule above and read `02-build/SKILL.md`.
 3. Continue through `03-agent/SKILL.md` (Step 4), `04-validate/SKILL.md` (Step 5), and

@@ -17,7 +17,9 @@ do not block the workflow on it.
 
 ---
 
-## Step 1 — Detect the surface (no question)
+## Step 1 — Choose ONE existing dashboard: get and stage its file
+
+### 1a. Detect the surface (no question)
 
 ```bash
 echo "surface=${CORTEX_CODE_CLIENT_SURFACE:-unknown} os=$(uname -s)"; test -d /workspace && echo cloud_mount
@@ -29,11 +31,7 @@ echo "surface=${CORTEX_CODE_CLIENT_SURFACE:-unknown} os=$(uname -s)"; test -d /w
 | `coco_snowsight`, or Linux with `/workspace` | Snowsight | `COPY FILES FROM snow://workspace` |
 | Still unclear | Ask once | — |
 
----
-
-## Step 2 — Get, stage, and analyze ONE baseline file
-
-### 2a. Ask for the file (one question)
+### 1b. Ask for the file (one question)
 
 | Surface | Ask |
 |---|---|
@@ -46,7 +44,7 @@ echo "surface=${CORTEX_CODE_CLIENT_SURFACE:-unknown} os=$(uname -s)"; test -d /w
 - File name has `[` or `]`: stage downloads fail. Rename it (Desktop) or ask the
   user to rename it (Snowsight).
 
-### 2b. Stage it (no question)
+### 1c. Stage it (no question)
 
 agent-studio's tools only take stage paths, so stage first, in the session's
 current database and schema:
@@ -66,7 +64,13 @@ Never use `cortex ws cp` to reach a stage — it copies to the sandbox and still
 reports success. File missing after one retry: give the clicks *Data » Databases
 » <DB> » <SCHEMA> » Stages » SEMANTIC_IMPORT_STAGE » + Files*.
 
-### 2c. Analyze it (no question)
+---
+
+## Step 2 — Map data objects, questions, and business definitions
+
+The analyze tools read these from the file; don't ask for them.
+
+### 2a. Analyze it (no question)
 
 Use agent-studio's built-in tools. Read its
 `semantic-view/reference/tableau_tool_reference.md` (or `pbi_tool_reference.md`)
@@ -83,7 +87,7 @@ Take from it: worksheets (Tableau) or tables (Power BI), `has_custom_sql`,
 non-Snowflake sources (`m_query_warnings`), and missing tables
 (`validation_warnings`).
 
-### 2d. Fix only what's broken
+### 2b. Fix only what's broken
 
 | Sign | Action |
 |---|---|
@@ -91,7 +95,7 @@ non-Snowflake sources (`m_query_warnings`), and missing tables
 | Power BI "does not contain a data model" | Ask for the model's `.pbix` or a `.pbit`. |
 | CSV / Excel / extract sources | Find the Snowflake tables behind the columns (`snowflake_object_search`, `INFORMATION_SCHEMA.COLUMNS`, query history). If it lands on an existing Semantic View, offer to reuse it. |
 
-### 2e. One confirm, pre-filled
+### 2c. One confirm, pre-filled
 
 One ask_user_question call with two questions: **tabs/tables** (all
 pre-selected) and **target `DATABASE.SCHEMA`** (default: the source tables'
