@@ -16,9 +16,13 @@ structure, then refine it with the definitions captured in Step 2.
 
 ## How to run it
 
-Delegate the build to the **`agent-studio`** skill's **`creation`** workflow:
-1. Point it at the source tables; let **Autopilot propose** the structure
-   (relationships, candidate metrics, dimensions, descriptions).
+Delegate the build to the **`agent-studio`** skill. "Autopilot" is the Snowsight
+name; in agent-studio it is the **`creation`** workflow (`sv-generate`):
+1. Pass the source tables **and** the top queries (as `sqlSource`, each with its
+   question). `creation` reads only column metadata plus the SQL you pass, so
+   the queries are where the business logic comes from. Then run agent-studio's
+   `suggest_relationships`, `filters_and_metrics_suggestions`, and
+   `generate_description` with no questions, and deploy with `upload`.
 2. Refine the proposal against Step 2:
    - Correct/confirm relationships and fact grain.
    - Encode each key metric with the formula used in query history.
