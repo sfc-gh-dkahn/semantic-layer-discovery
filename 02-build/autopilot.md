@@ -41,4 +41,4 @@ Build for those questions first; expand only after Step 5 proves the baseline.
 - Initial VQRs drafted from the baseline questions.
 - View descriptions/synonyms added; view treated as certified.
 
-Return to `build/SKILL.md` "After the branch", then continue to `agent/SKILL.md`.
+Return to `02-build/SKILL.md` "After the branch", then continue to `03-agent/SKILL.md`.

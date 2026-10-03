@@ -28,7 +28,7 @@ the fastest proof point for broader adoption.
 Surface the validated agent where the business already works:
 - **CoWork** — business users chat with the agent directly.
 - **Streamlit app, App Runtime app, or Dashboard (Private Preview)** — offered next in **Step 6**
-  (`app/SKILL.md`); the customer picks one first.
+  (`05-app/SKILL.md`); the customer picks one first.
 
 ## 5d. Then — and only then — expand
 
@@ -43,11 +43,11 @@ dashboard. Resist widening scope before the first proof point lands.
 - VQRs added for the baseline questions and known edge cases.
 - Agent surfaced in CoWork (or an app), with a named owner.
 - A clear "next dashboard" candidate identified for the second iteration.
-- Then proceed to **Step 6** (`app/SKILL.md`), which asks the customer what to
+- Then proceed to **Step 6** (`05-app/SKILL.md`), which asks the customer what to
   build (or to skip) before building anything.
 
 ## Optional follow-ups
 
 - Schedule this as a repeatable engagement per dashboard.
-- If governance/trust is a stakeholder concern, revisit `agent/SKILL.md`
+- If governance/trust is a stakeholder concern, revisit `03-agent/SKILL.md`
   guardrails and confirm RBAC/RLS/masking behavior with the customer's security team.

@@ -64,4 +64,4 @@ model.
 - Key metrics verified present (dropped measures noted for Step 5).
 - View descriptions/synonyms added; view treated as certified.
 
-Return to `build/SKILL.md` "After the branch", then continue to `agent/SKILL.md`.
+Return to `02-build/SKILL.md` "After the branch", then continue to `03-agent/SKILL.md`.

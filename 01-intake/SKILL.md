@@ -40,7 +40,7 @@ echo "surface=${CORTEX_CODE_CLIENT_SURFACE:-unknown} os=$(uname -s)"; test -d /w
 | Desktop / CLI | "Path to your Tableau or Power BI file? (or `none`)" |
 | Snowsight | "Upload your Tableau or Power BI file into this workspace, then say `done`. (or `none`)" |
 
-- `none` -> skip to `build/autopilot.md`.
+- `none` -> skip to `02-build/autopilot.md`.
 - Snowsight: find the file yourself (`find /workspace -maxdepth 4 -type f \( -iname '*.twb*' -o -iname '*.tds*' -o -iname '*.pbi[tx]' \) -mmin -60`).
 - One dashboard only — do not bulk-import the BI estate.
 - File name has `[` or `]`: stage downloads fail. Rename it (Desktop) or ask the
@@ -106,4 +106,4 @@ Before moving to Step 3, you should have:
 - Its analyze result: tabs/tables, source tables, any fixes made.
 - The confirmed tabs and target schema.
 
-Then proceed to `build/SKILL.md` and apply the routing rule.
+Then proceed to `02-build/SKILL.md` and apply the routing rule.

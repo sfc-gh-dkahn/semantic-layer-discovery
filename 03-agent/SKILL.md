@@ -44,4 +44,4 @@ in; the agent object must actually be created and confirmed to exist before Step
 - NL instructions for tone, scope, and business rules in place.
 - Confirmed that RBAC / RLS / masking behave correctly for a non-admin test user.
 
-Proceed to `validate/SKILL.md` (Step 5).
+Proceed to `04-validate/SKILL.md` (Step 5).

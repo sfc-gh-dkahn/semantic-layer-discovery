@@ -31,15 +31,15 @@ Step 0 (optional, Cortex Sense — Public Preview Nov 2026)
   issues from Snowflake metadata, query history, dbt, Tableau, and Power BI —
   BEFORE building Semantic Views.
 
-Step 1  Detect the surface (Snowsight vs Desktop/CLI)     -> discovery/SKILL.md
+Step 1  Detect the surface (Snowsight vs Desktop/CLI)     -> 01-intake/SKILL.md
 Step 2  Upload + stage the file, analyze it with agent-studio's
-        Tableau / Power BI tools, confirm tabs + schema      -> discovery/SKILL.md
-Step 3  Create the Semantic View                            -> build/SKILL.md
-          ├─ HAS a Power BI / Tableau file -> build/import.md
-          └─ answered `none`               -> build/autopilot.md
-Step 4  Create a Cortex Agent on the certified view         -> agent/SKILL.md
-Step 5  Validate against the baseline, add VQRs, ship        -> validate/SKILL.md
-Step 6  (opt-in) ASK: Streamlit app, App Runtime app, or Dashboard (PrPr) -> app/SKILL.md
+        Tableau / Power BI tools, confirm tabs + schema      -> 01-intake/SKILL.md
+Step 3  Create the Semantic View                            -> 02-build/SKILL.md
+          ├─ HAS a Power BI / Tableau file -> 02-build/import.md
+          └─ answered `none`               -> 02-build/autopilot.md
+Step 4  Create a Cortex Agent on the certified view         -> 03-agent/SKILL.md
+Step 5  Validate against the baseline, add VQRs, ship        -> 04-validate/SKILL.md
+Step 6  (opt-in) ASK: Streamlit app, App Runtime app, or Dashboard (PrPr) -> 05-app/SKILL.md
 ```
 
 ## The routing rule (no question)
@@ -47,9 +47,9 @@ Step 6  (opt-in) ASK: Streamlit app, App Runtime app, or Dashboard (PrPr) -> app
 The file from **Step 2** decides the route — don't ask "Do you have Power BI or
 Tableau?":
 
-- **Power BI** (`.pbit` / `.pbix`) -> `build/import.md` (Power BI path)
-- **Tableau** (`.twb` / `.twbx` / `.tds` / `.tdsx`) -> `build/import.md` (Tableau path)
-- **`none`** -> `build/autopilot.md` (build from metadata / Autopilot)
+- **Power BI** (`.pbit` / `.pbix`) -> `02-build/import.md` (Power BI path)
+- **Tableau** (`.twb` / `.twbx` / `.tds` / `.tdsx`) -> `02-build/import.md` (Tableau path)
+- **`none`** -> `02-build/autopilot.md` (build from metadata / Autopilot)
 
 Importing carries **DAX measures, relationships, and calculations directly in**,
 so if the customer has a BI tool, prefer import — it reflects already-validated
@@ -92,15 +92,15 @@ The file answers most questions, so don't ask them. You MUST:
   ask_user_question call, with every answer pre-filled.
 - Pass every value into agent-studio's tools yourself so it never stops to ask.
 
-1. Read `discovery/SKILL.md` and run Steps 1-2: detect the surface, then get,
+1. Read `01-intake/SKILL.md` and run Steps 1-2: detect the surface, then get,
    stage, and analyze the file.
-2. At Step 3, apply the routing rule above and read `build/SKILL.md`.
-3. Continue through `agent/SKILL.md` (Step 4), `validate/SKILL.md` (Step 5), and
-   `app/SKILL.md` (Step 6).
+2. At Step 3, apply the routing rule above and read `02-build/SKILL.md`.
+3. Continue through `03-agent/SKILL.md` (Step 4), `04-validate/SKILL.md` (Step 5), and
+   `05-app/SKILL.md` (Step 6).
 4. For the actual semantic-view import or build, delegate to the `agent-studio`
    skill (its `import_tableau`, `import_powerbi`, and `creation` workflows).
 5. For the Step 6 build, delegate to the skill for the chosen option and the
-   user's surface (Desktop/CLI vs Snowsight) — see the table in `app/SKILL.md`.
+   user's surface (Desktop/CLI vs Snowsight) — see the table in `05-app/SKILL.md`.
 
 ## Guiding principle
 

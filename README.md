@@ -40,15 +40,15 @@ enable a semantic layer.*
 
 | Step | What happens | File |
 |---|---|---|
-| 0 (optional) | Run **Cortex Sense** (PuPr Nov 2026) to surface naming conflicts, metric gaps, coverage | `discovery/SKILL.md` |
-| 1 | **Detect the surface** (Snowsight vs Desktop/CLI) | `discovery/SKILL.md` |
-| 2 | **Upload + stage** the file (`COPY FILES` or `PUT`), **analyze** it (`tableau_analyze` / `pbi_analyze`), confirm tabs + schema | `discovery/SKILL.md` |
-| 3 | **Create the Semantic View** — the branch point | `build/SKILL.md` |
-| 3a | Has Power BI/Tableau → **import** the workbook | `build/import.md` |
-| 3b | No file (`none`) → **Autopilot** from metadata | `build/autopilot.md` |
-| 4 | Wire a **Cortex Agent** on the certified view | `agent/SKILL.md` |
-| 5 | **Validate** vs baseline, add Verified Queries, ship | `validate/SKILL.md` |
-| 6 | **Ask** what to build — **Streamlit app**, **App Runtime app**, or **Dashboard** (Private Preview) — then build it | `app/SKILL.md` |
+| 0 (optional) | Run **Cortex Sense** (PuPr Nov 2026) to surface naming conflicts, metric gaps, coverage | `01-intake/SKILL.md` |
+| 1 | **Detect the surface** (Snowsight vs Desktop/CLI) | `01-intake/SKILL.md` |
+| 2 | **Upload + stage** the file (`COPY FILES` or `PUT`), **analyze** it (`tableau_analyze` / `pbi_analyze`), confirm tabs + schema | `01-intake/SKILL.md` |
+| 3 | **Create the Semantic View** — the branch point | `02-build/SKILL.md` |
+| 3a | Has Power BI/Tableau → **import** the workbook | `02-build/import.md` |
+| 3b | No file (`none`) → **Autopilot** from metadata | `02-build/autopilot.md` |
+| 4 | Wire a **Cortex Agent** on the certified view | `03-agent/SKILL.md` |
+| 5 | **Validate** vs baseline, add Verified Queries, ship | `04-validate/SKILL.md` |
+| 6 | **Ask** what to build — **Streamlit app**, **App Runtime app**, or **Dashboard** (Private Preview) — then build it | `05-app/SKILL.md` |
 
 ### The one decision point (Step 3) — the file decides, no question
 
@@ -74,7 +74,7 @@ prefer import when a BI tool exists.
 5. **Identity/reference-data is a separate track.** Importing a dashboard gives
    you the model; it does NOT reconcile the same entity appearing under different
    names/IDs across systems. Flag identity gaps, but scope and quote that work
-   separately (see `build/import.md`).
+   separately (see `02-build/import.md`).
 
 ## What "done" looks like
 
@@ -119,12 +119,12 @@ request matches the triggers above.
 semantic-layer-discovery/
 ├── README.md            this guide
 ├── SKILL.md             manifest + 5-step flow + routing rule
-├── discovery/SKILL.md   Steps 0-2 (Cortex Sense, surface, upload + analyze)
-├── build/
+├── 01-intake/SKILL.md   Steps 0-2 (Cortex Sense, surface, upload + analyze)
+├── 02-build/
 │   ├── SKILL.md         Step 3 router
 │   ├── import.md        Power BI / Tableau import path (+ identity callout)
 │   └── autopilot.md     from-scratch / Autopilot path
-├── agent/SKILL.md       Step 4
-├── validate/SKILL.md    Step 5
-└── app/SKILL.md         Step 6 (Streamlit / App Runtime / Dashboard)
+├── 03-agent/SKILL.md    Step 4
+├── 04-validate/SKILL.md Step 5
+└── 05-app/SKILL.md      Step 6 (Streamlit / App Runtime / Dashboard)
 ```

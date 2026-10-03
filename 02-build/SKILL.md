@@ -10,9 +10,9 @@ but *how* you create it depends on the file from Step 2.
 
 | File | Route to | Why |
 |---|---|---|
-| **Power BI** (`.pbit` / `.pbix`) | `build/import.md` → Power BI path | DAX measures, relationships, calcs carry directly in |
-| **Tableau** (`.twb` / `.twbx` / `.tds` / `.tdsx`) | `build/import.md` → Tableau path | Datasource joins, calcs, and fields carry in |
-| **`none`** | `build/autopilot.md` | Build fresh from Snowflake metadata via Autopilot |
+| **Power BI** (`.pbit` / `.pbix`) | `02-build/import.md` → Power BI path | DAX measures, relationships, calcs carry directly in |
+| **Tableau** (`.twb` / `.twbx` / `.tds` / `.tdsx`) | `02-build/import.md` → Tableau path | Datasource joins, calcs, and fields carry in |
+| **`none`** | `02-build/autopilot.md` | Build fresh from Snowflake metadata via Autopilot |
 
 **Prefer import when a BI tool exists.** The workbook already encodes
 business-validated definitions, so importing is faster and more trustworthy than
@@ -28,7 +28,7 @@ Both paths produce a **Semantic View** (GA). Once it exists:
 - Add descriptions and synonyms so Cortex Analyst understands business language.
 - Mark/treat the view as **certified** — Step 4 wires the agent to a certified view.
 
-Then proceed to `agent/SKILL.md` (Step 4).
+Then proceed to `03-agent/SKILL.md` (Step 4).
 
 ## Delegation (REQUIRED — actually create the object, do not narrate)
 
