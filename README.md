@@ -41,16 +41,18 @@ enable a semantic layer.*
 | Step | What happens | File |
 |---|---|---|
 | 0 (optional) | Run **Cortex Sense** (PuPr Nov 2026) to surface naming conflicts, metric gaps, coverage | `01-intake/SKILL.md` |
-| 1 | Choose **ONE** existing dashboard as the baseline: **upload its file** (or screenshots from any other BI tool); the skill stages it with the right tool for Snowsight or Desktop/CLI | `01-intake/SKILL.md` |
-| 2 | Map data objects, questions, and business definitions: **analyze** the file (`tableau_analyze` / `pbi_analyze`), confirm tabs + schema | `01-intake/SKILL.md` |
+| 1 | Choose **ONE** existing dashboard/report/KPI set as the baseline; **upload its file** (or screenshots) | `01-intake/SKILL.md` |
+| 2 | Map data objects, questions, and business definitions | `01-intake/SKILL.md` |
 | 3 | **Create the Semantic View** — the branch point | `02-build/SKILL.md` |
 | 3a | Has Power BI/Tableau → **import** the workbook | `02-build/import.md` |
-| 3b | Screenshots (any other BI tool) or `none` → **Autopilot** from metadata | `02-build/autopilot.md` |
+| 3b | Has neither → **Autopilot** from screenshots or metadata | `02-build/autopilot.md` |
 | 4 | Wire a **Cortex Agent** on the certified view | `03-agent/SKILL.md` |
 | 5 | **Validate** vs baseline, add Verified Queries, ship | `04-validate/SKILL.md` |
 | 6 | **Ask** what to build — **Streamlit app**, **App Runtime app**, or **Dashboard** (Private Preview) — then build it | `05-app/SKILL.md` |
 
-### The one decision point (Step 3) — the file decides, no question
+### The one decision point (Step 3)
+
+> The file from Step 1 decides; no question.
 
 - **Power BI** (`.pbit`/`.pbix`) or **Tableau** (`.twb`/`.twbx`/`.tds`/`.tdsx`) → import path
 - **Screenshots (any other BI tool) or `none`** → Autopilot / build-from-metadata path
