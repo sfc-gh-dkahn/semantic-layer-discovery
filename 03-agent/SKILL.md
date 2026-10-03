@@ -13,8 +13,8 @@ a data model into an **agentic BI experience** the business can talk to.
 2. **Add natural-language instructions** for:
    - **Tone** — how answers should read for this audience.
    - **Scope** — what's in/out of bounds (keep it to the baseline domain first).
-   - **Business rules** — standing assumptions, default date ranges, canonical
-     metric choices from Step 2c.
+   - **Business rules** — standing assumptions, default date ranges, filters and date defaults from the file's `usage_context` (Tableau) or page
+     filters and slicers (Power BI).
 
 3. **Governance travels with every answer.** The agent automatically inherits:
    - **RBAC** — users see only what their role permits.
@@ -44,4 +44,4 @@ in; the agent object must actually be created and confirmed to exist before Step
 - NL instructions for tone, scope, and business rules in place.
 - Confirmed that RBAC / RLS / masking behave correctly for a non-admin test user.
 
-Proceed to `validate/SKILL.md` (Step 5).
+Proceed to `04-validate/SKILL.md` (Step 5).

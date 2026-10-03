@@ -52,7 +52,7 @@ and **wait for the answer**:
 | **Effort** | Low | Higher | Lowest |
 | **Where it runs** | Streamlit in Snowflake | Snowflake App Runtime (SPCS) | Built in Snowsight Workspaces; viewed in CoWork |
 
-## 6a. Confirm inputs (one question at a time)
+## 6a. Confirm inputs (reuse, don't ask)
 
 Reuse what you already have from Steps 1-5; only ask for what's missing:
 
@@ -71,7 +71,7 @@ Build a single-file app (`streamlit_app.py` + `environment.yml` if needed):
 | Section | What it shows | Source |
 |---|---|---|
 | **Header** | Baseline dashboard name, agent name, owner | Steps 1, 4, 5 |
-| **Baseline KPIs** | The 3-5 baseline metrics as `st.metric` tiles + 1-2 charts, mirroring the Step 1 dashboard (use the screenshot if provided) | `SELECT * FROM SEMANTIC_VIEW(<sv> METRICS ... DIMENSIONS ...)` |
+| **Baseline KPIs** | The 3-5 baseline metrics as `st.metric` tiles + 1-2 charts, mirroring the baseline dashboard (use the screenshot if provided) | `SELECT * FROM SEMANTIC_VIEW(<sv> METRICS ... DIMENSIONS ...)` |
 | **Ask the agent** | `st.chat_input` / `st.chat_message` chat that calls the Cortex Agent and renders its text, generated SQL (in an expander), and result tables | Cortex Agent REST API (`/api/v2/databases/<db>/schemas/<schema>/agents/<agent>:run`) |
 | **Suggested questions** | Buttons for the baseline questions / VQRs from Step 5 that pre-fill the chat | Step 5 VQRs |
 

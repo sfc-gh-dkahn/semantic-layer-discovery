@@ -8,11 +8,15 @@ the fastest proof point for broader adoption.
 
 ## 5a. Validate against the baseline
 
-- Take the **3-5 questions** the baseline dashboard answers (Step 2b) and ask the
+- Write one question per worksheet (Tableau) or visual (Power BI) from its title,
+  fields, and `usage_context` filters, plus one per dropped metric, and ask the
   agent each one.
 - Compare the agent's numbers to the dashboard's. They should match.
-- For any mismatch, trace it: usually a metric definition (Step 2c), a fact-grain
+- For any mismatch, trace it: usually a metric definition, a fact-grain
   issue, or a missing filter in the Semantic View. Fix in the view, re-test.
+- **No file (Autopilot path):** with screenshots, ask one question per chart
+  with the filters and date range shown, and match the numbers on screen. No
+  screenshots: check against the top queries from query history instead.
 
 ## 5b. Add Verified Queries for edge cases
 
@@ -27,7 +31,7 @@ the fastest proof point for broader adoption.
 Surface the validated agent where the business already works:
 - **CoWork** — business users chat with the agent directly.
 - **Streamlit app, App Runtime app, or Dashboard (Private Preview)** — offered next in **Step 6**
-  (`app/SKILL.md`); the customer picks one first.
+  (`05-app/SKILL.md`); the customer picks one first.
 
 ## 5d. Then — and only then — expand
 
@@ -42,11 +46,11 @@ dashboard. Resist widening scope before the first proof point lands.
 - VQRs added for the baseline questions and known edge cases.
 - Agent surfaced in CoWork (or an app), with a named owner.
 - A clear "next dashboard" candidate identified for the second iteration.
-- Then proceed to **Step 6** (`app/SKILL.md`), which asks the customer what to
+- Then proceed to **Step 6** (`05-app/SKILL.md`), which asks the customer what to
   build (or to skip) before building anything.
 
 ## Optional follow-ups
 
 - Schedule this as a repeatable engagement per dashboard.
-- If governance/trust is a stakeholder concern, revisit `agent/SKILL.md`
+- If governance/trust is a stakeholder concern, revisit `03-agent/SKILL.md`
   guardrails and confirm RBAC/RLS/masking behavior with the customer's security team.
