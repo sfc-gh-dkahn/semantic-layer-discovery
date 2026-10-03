@@ -10,9 +10,9 @@ or Tableau.
 
 ## What it does
 
-- Detects **Snowsight vs Desktop/CLI**, has the user upload **one** baseline
-  Tableau / Power BI file to a stage with the right tool, and **analyzes** it
-  with agent-studio's built-in tools.
+- Has the user upload **one** baseline Tableau / Power BI file (or screenshots
+  from any other BI tool), stages it with the right tool for Snowsight or
+  Desktop/CLI, and **analyzes** it with agent-studio's built-in tools.
 - **Branches at Step 3** on the file: Power BI/Tableau **imports** it; `none`
   builds from scratch with **Autopilot**.
 - Wires a **Cortex Agent** to the certified view and **validates** it against the
@@ -41,8 +41,7 @@ enable a semantic layer.*
 | Step | What happens | File |
 |---|---|---|
 | 0 (optional) | Run **Cortex Sense** (PuPr Nov 2026) to surface naming conflicts, metric gaps, coverage | `01-intake/SKILL.md` |
-| 1 | **Detect the surface** (Snowsight vs Desktop/CLI) | `01-intake/SKILL.md` |
-| 2 | **Upload + stage** the file (`COPY FILES` or `PUT`), **analyze** it (`tableau_analyze` / `pbi_analyze`), confirm tabs + schema | `01-intake/SKILL.md` |
+| 1–2 | **Upload + stage** the file (the skill picks the right upload tool for Snowsight or Desktop/CLI), **analyze** it (`tableau_analyze` / `pbi_analyze`), confirm tabs + schema | `01-intake/SKILL.md` |
 | 3 | **Create the Semantic View** — the branch point | `02-build/SKILL.md` |
 | 3a | Has Power BI/Tableau → **import** the workbook | `02-build/import.md` |
 | 3b | Screenshots (any other BI tool) or `none` → **Autopilot** from metadata | `02-build/autopilot.md` |
