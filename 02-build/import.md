@@ -41,8 +41,7 @@ confirmed per-table mappings. A remap cannot recover an M source dropped at pars
 2. Apply `02-build/SKILL.md`'s **Required coverage gate** to named baseline metrics
    and dependencies. For Power BI, check export's `unsupported_measure_count`,
    `m_query_warnings`, and `validation_warnings`; zero unsupported measures alone
-   does not prove coverage. When tables were dropped (`NO_SNOWFLAKE_REFERENCE`),
-   measures that depend on them are "source unavailable", not unsupported. Tableau may skip LOD/table calculations even when their
+   does not prove coverage. Tableau may skip LOD/table calculations even when their
    source definitions exist. Update the baseline from `usage_context` only where
    it adds evidence, without silently changing the confirmed scope.
 3. Follow the delegated save/reference-check sequence: Tableau verifies references

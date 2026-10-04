@@ -53,9 +53,7 @@ ask_user_question, showing only the relevant tool guidance when it is known:
 
 Packaged files may contain business rows; request definitions without rows when
 available. Packaging does not make unsupported calculations convertible. Do not
-ask users to change live/extract or Import/DirectQuery mode just to import metadata
-from a source that is already in Snowflake. If the source isn't in Snowflake,
-repointing it is the fix (see 2b).
+ask users to change live/extract or Import/DirectQuery mode just to import metadata.
 Screenshots provide scope/results, not proof of a formula. A source-only file
 can still be useful; it just needs separate dashboard context.
 
@@ -72,9 +70,11 @@ can still be useful; it just needs separate dashboard context.
 - File name has `[` or `]`: stage downloads fail. Rename it (Desktop) or ask the
   user to rename it (Snowsight).
 
-### 1b-2. Check connection types locally (no question)
+### 1b-2. Check sources and pages locally (no question)
 
-Before staging a BI file, read its source types.
+Before staging a BI file, read its sources and, for Power BI, its pages. This
+skill covers dashboards built on Snowflake. If no source is Snowflake, the file
+is out of scope; say so and stop.
 
 **Tableau.** `.twbx`/`.tdsx` are
 zip archives; `.twb`/`.tds` are plain XML. Both surfaces have a shell.
@@ -92,7 +92,6 @@ is publish history, not a published source.
 |---|---|---|
 | A `snowflake` connection | Importable | Stage (1c) |
 | A `sqlproxy` connection | Published-source stub | Stage (1c), then request the `.tds`/`.tdsx` (2b) |
-| Only `hyper`, `dataengine`, `excel-direct`, `textscan`, or another non-Snowflake class | Embedded file/extract or non-Snowflake database. The importer accepts only Snowflake connections, so analyze/export return no datasources. | Skip staging. Go to 2b "Non-Snowflake source". |
 
 **Power BI.** `.pbix`/`.pbit` are zip archives. Power Query sources are in
 `DataMashup`: 8 header bytes, a 4-byte little-endian length, then a zip holding
@@ -119,8 +118,7 @@ PY
 
 | Finding | Meaning | Next |
 |---|---|---|
-| Every table's `Source =` uses `Snowflake.Databases` | Importable | Stage (1c) |
-| Any `Sql.Database`, `Excel.Workbook`/`File.Contents`, `Csv.Document`, other connector, or inline `Table.FromRows(Json.Document(...))` | Not in Snowflake. Analyze drops these tables, sometimes with empty `m_query_warnings`. | Skip staging if the baseline needs them. Go to 2b "Non-Snowflake source". |
+| `Source =` uses `Snowflake.Databases` | Importable | Stage (1c) |
 | No `DataMashup` or no `Section1.m` | Thin report or live connection | 2b "thin report" |
 
 Keep the page list. Measures referenced on the baseline page become the
@@ -128,8 +126,7 @@ required metrics in 2c; one missing from the model's measures (for example a
 hidden or KPI-only measure) is a gap to ask about, not something to infer.
 
 Read only the XML/JSON/M text. Do not open `.hyper` files, decompress
-`DataModel`, or run file-supplied code. Keep the formulas you find; they carry
-forward to whichever route you choose.
+`DataModel`, or run file-supplied code.
 
 ### 1c. Stage it (no question)
 
@@ -175,7 +172,7 @@ first for exact parameter names.
 
 ```bash
 cortex agent-studio backend --tool tableau_analyze --parameters '{"file_path":"@<DB>.<SCHEMA>.SEMANTIC_IMPORT_STAGE/<file>"}'
-cortex agent-studio backend --tool pbi_analyze --parameters '{"file_path":"@<DB>.<SCHEMA>.SEMANTIC_IMPORT_STAGE/<file>","validate_in_snowflake":false}'
+cortex agent-studio backend --tool pbi_analyze --parameters '{"file_path":"@<DB>.<SCHEMA>.SEMANTIC_IMPORT_STAGE/<file>","validate_in_snowflake":true}'
 ```
 
 No `cortex` CLI? One JSON argument:
@@ -186,11 +183,7 @@ Parse the response's stringified `result`. `success: true` alone is not a pass:
 treat analyze as failed if `datasources` is empty or `total_columns` is 0
 (Tableau) or `total_tables` is 0 (Power BI), and treat export as failed if
 `errors` is non-empty, `table_count` is 0, or `yaml_content` has no tables.
-Read `warnings` and `message` for the cause (for example "Unsupported nested
-connection type" or `NO_SNOWFLAKE_REFERENCE`); Power BI can report every table
-dropped with empty `m_query_warnings`. Then go to 2b. Export's "gap in our Power
-BI support, contact support" text is misleading when the cause is
-`NO_SNOWFLAKE_REFERENCE`; treat it as a non-Snowflake source. Otherwise retain worksheets
+Read `warnings` and `message` for the cause, then go to 2b. Otherwise retain worksheets
 (Tableau), resolved tables/measures (Power BI), `has_custom_sql`, and warnings.
 Power BI's analyze validation warnings are under `validation.validation_warnings`;
 `m_query_warnings` describe unresolved sources. `unsupported_measure_count` is
@@ -206,9 +199,8 @@ Tableau `usage_context` arrives at export. Mark unavailable context as missing.
 | Published Tableau source reference (a `sqlproxy` connection in the XML) with missing relations. `relation_count: 0` without a stub is not this case. | Request the owning `.tds`/`.tdsx`. Keep the workbook as the primary input; stage the sidecar for **export's** `additional_files`. Only the first sidecar is used; `published_datasource_stub_name` selects one stub, not a bulk merge. If the baseline needs several unresolved sources, explain the limit and agree a narrower scope or another build route. |
 | Tableau source-only `.tds`/`.tdsx` | Keep usable definitions; collect the baseline page/results separately. Do not require a workbook solely to import source metadata. |
 | Power BI thin report / missing model | Request the model owner's PBIT or model-containing PBIX, not another export of the same thin report. |
-| Non-Snowflake source: embedded extract (`hyper`/`.tde`), file (`excel-direct`, `textscan`, Excel/CSV in Power Query), inline Power BI table, or another database (for example `Sql.Database`) | No sidecar fixes this; a `.tds` of the same source has the same connection. Ask once: where does this data come from upstream, and is it (or can it be) in Snowflake? Keep the extracted formulas. Once it is in Snowflake, either the owner repoints the datasource (Tableau *Data > Replace Data Source*; Power BI Power Query `Snowflake.Databases`) and resends the file for import, or use Autopilot on the landed table with the retained formulas. Until then, pause. |
 | Unsupported artifact (for example bare Hyper or PBIP) | Explain the missing container/definitions and request a supported owning artifact; renaming an extension is not conversion. |
-| Source pointer, unresolved M source, or external data | Check retained source metadata first, then discover and confirm compatible Snowflake objects. An extract of a Snowflake connection still carries its source definitions; an extract of a file or another database does not (see the Non-Snowflake source row). Do not assume rows or matching column names establish lineage, or that a schema remap recovers a table dropped during parsing. |
+| Source pointer, unresolved M source, or external data | Check retained source metadata first, then discover and confirm compatible Snowflake objects. An extract of a Snowflake connection still carries its source definitions. Do not assume rows or matching column names establish lineage, or that a schema remap recovers a table dropped during parsing. |
 
 Record the missing dependency and why the replacement helps. Retry only when
 the artifact, mapping, or relevant parameters change. If the owner cannot provide
@@ -216,10 +208,6 @@ it, offer metadata-based build with the evidence already collected, or pause.
 Do not cycle file formats for a translator limitation or restart successful work.
 
 ### 2c. One confirm, pre-filled
-
-Run this only once a usable source path exists (importable artifact, or a
-confirmed Snowflake table). If 2b paused on a missing source, record the
-proposed baseline in the working project but do not ask for confirmation yet.
 
 Maintain one **baseline record** in the working project, populated from supplied
 evidence: chosen dashboard/page; required metrics/questions and their definition
