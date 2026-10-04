@@ -100,7 +100,7 @@ Screenshots/no usable model use the metadata path with confirmed definition evid
 
 ## Install
 
-**Snowsight** (it can't reach GitHub, so don't paste the repo link):
+**Snowsight**
 
 1. On your laptop, download this repo from GitHub (**Code » Download ZIP**) and
    unzip it.
