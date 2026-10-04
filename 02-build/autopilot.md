@@ -1,55 +1,57 @@
-# Step 3 — Autopilot / from-scratch path (customer has NEITHER BI tool)
+# Step 3 — Autopilot path (screenshots from another BI tool, or no file)
 
-Use this when the customer has no Power BI or Tableau to import. You build the
-Semantic View fresh from Snowflake metadata, using **Autopilot** to propose the
-structure, then refine it with the definitions captured in Step 2.
+Use this when there's no Tableau or Power BI file to import. Build the Semantic
+View from Snowflake metadata with **Autopilot**: screenshots tell you *which*
+metrics matter; query history tells you *how* they're calculated.
 
 ---
 
-## Inputs (all from discovery)
+## Inputs
 
-- **Dashboard screenshots**, if pasted (Domo, Hex, any BI tool). Read the KPI
-  names, chart titles, grouping fields, filters, date range, and the numbers
-  shown. These set the view's scope, become the agent's questions, and are the
-  baseline for Step 5.
+- **Dashboard screenshots**, if pasted (Domo, Hex, Looker, Sigma, any BI tool).
+  Read them from the chat, not as a file in `/workspace`. Take the KPI names,
+  chart titles, grouping fields, filters, date range, and numbers shown. These
+  are the metric list, the agent's questions, and the Step 5 baseline.
+- The **source tables**: search with the KPI and field names from the
+  screenshots (`snowflake_object_search`, `snowflake_semantic_view_search`,
+  busiest tables in query history). An existing semantic view on them: offer
+  to reuse it.
+- The **top queries** on those tables in query history, including the BI
+  tool's service user if it queries Snowflake live. These hold the metric SQL.
 
-- The **source-of-truth tables/views**: search for them first, using the KPI and field names from the
-  screenshots if any (`snowflake_object_search`,
-  `snowflake_semantic_view_search`, busiest tables in query history), then
-  confirm the picks and target schema in one pre-filled question.
-- The top queries on those tables in query history (including the BI tool's
-  service user, if it queries Snowflake live) — these become Verified
-  Queries later.
+Confirm the tables and target schema in one pre-filled question. Default the
+schema to where the tables live (see `01-intake/SKILL.md` 2c).
 
 ## How to run it
 
-Delegate the build to the **`agent-studio`** skill. "Autopilot" is the Snowsight
-name; in agent-studio it is the **`creation`** workflow (`sv-generate`):
+Delegate to the **`agent-studio`** skill. "Autopilot" is the Snowsight name;
+in agent-studio it is the **`creation`** workflow (`sv-generate`):
 1. Pass the source tables **and** the top queries (as `sqlSource`, each with its
    question). `creation` reads only column metadata plus the SQL you pass, so
    the queries are where the business logic comes from. Then run agent-studio's
    `suggest_relationships`, `filters_and_metrics_suggestions`, and
    `generate_description` with no questions, and deploy with `upload`.
-2. Refine the proposal against Step 2:
-   - Correct/confirm relationships and fact grain.
-   - Encode each key metric with the formula used in query history.
-   - Add non-additive metrics carefully (ratios, distinct counts, averages).
-   - Add named filters for the standing filters and common drill-downs.
-   - Add descriptions + synonyms so Cortex Analyst maps business language.
-3. Turn those top queries into **Verified Queries (VQRs)** — this seeds
-   accuracy and is validated in Step 5.
+2. Check each screenshot metric against the view, following
+   `02-build/SKILL.md` » Metrics: traced SQL goes in; anything without SQL goes
+   on the "couldn't find" list for the user. Then:
+   - Confirm relationships and fact grain against the queries' joins.
+   - Take care with non-additive metrics (ratios, distinct counts, averages).
+   - Add named filters for the filters shown on screen.
+   - Add descriptions + synonyms using the dashboard's labels.
+3. Turn the top queries into **Verified Queries (VQRs)**. Step 5 tests them.
 
 ## Why questions-first matters
 
-Anchoring the build on the ~5 real questions (rather than modeling every column)
-keeps the view scoped to the baseline and gives you a concrete accuracy target.
-Build for those questions first; expand only after Step 5 proves the baseline.
+Building for the dashboard's few real questions, not every column, keeps the
+view scoped and gives Step 5 a clear accuracy target. Expand only after Step 5
+proves the baseline.
 
 ## Exit criteria
 
-- Semantic View created and refined.
-- Key metrics encoded with correct, owner-confirmed formulas.
-- Initial VQRs drafted from the baseline questions.
-- View descriptions/synonyms added; view treated as certified.
+- Semantic View created.
+- Every screenshot metric is in the view with traced SQL, or on the "couldn't
+  find" list shown to the user.
+- Initial VQRs drafted from the top queries.
+- Descriptions/synonyms added; view treated as certified.
 
 Return to `02-build/SKILL.md` "After the branch", then continue to `03-agent/SKILL.md`.

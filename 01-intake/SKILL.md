@@ -22,14 +22,17 @@ do not block the workflow on it.
 ### 1a. Detect the surface (no question)
 
 ```bash
-echo "surface=${CORTEX_CODE_CLIENT_SURFACE:-unknown} os=$(uname -s)"; test -d /workspace && echo cloud_mount
+uname -s; test -d /workspace && echo cloud_mount
 ```
 
 | Result | Surface | Staging tool |
 |---|---|---|
-| `coco_desktop` / `coco_cli`, or `Darwin`/Windows with no `/workspace` | Desktop / CLI | `PUT file://` |
-| `coco_snowsight`, or Linux with `/workspace` | Snowsight | `COPY FILES FROM snow://workspace` |
+| No `/workspace` (macOS, Windows, Linux laptop) | Desktop / CLI | `PUT file://` |
+| Linux with `/workspace` | Snowsight | `COPY FILES FROM snow://workspace` |
 | Still unclear | Ask once | — |
+
+(No documented environment variable names the surface, so probe the
+filesystem.)
 
 ### 1b. Ask for the file (one question)
 
@@ -39,26 +42,39 @@ echo "surface=${CORTEX_CODE_CLIENT_SURFACE:-unknown} os=$(uname -s)"; test -d /w
 | Snowsight | "Upload your Tableau or Power BI file into this workspace, then say `done`. Using another BI tool (Domo, Hex, ...)? Paste dashboard screenshots instead. (or `none`)" |
 
 - Screenshots or `none` -> skip to `02-build/autopilot.md`.
-- Snowsight: find the file yourself (`find /workspace -maxdepth 4 -type f \( -iname '*.twb*' -o -iname '*.tds*' -o -iname '*.pbi[tx]' \) -mmin -60`).
+- Snowsight: find the file yourself. The sandbox mounts only the **default**
+  workspace at `/workspace`, so try `find /workspace -maxdepth 4 -type f \(
+  -iname '*.twb*' -o -iname '*.tds*' -o -iname '*.pbi[tx]' \)` first. Not
+  there? The file is in another workspace: run `SHOW WORKSPACES` and use the
+  `name` column in 1c. A file dropped into the chat is not in `/workspace`;
+  ask for a workspace upload instead.
 - One dashboard only — do not bulk-import the BI estate.
 - File name has `[` or `]`: stage downloads fail. Rename it (Desktop) or ask the
   user to rename it (Snowsight).
 
 ### 1c. Stage it (no question)
 
-agent-studio's tools only take stage paths, so stage first, in the session's
-current database and schema:
+agent-studio's tools only take stage paths, so stage first. The stage only
+holds the file; it doesn't decide where the semantic view goes (2c does). Put
+it in the session's current schema (`SELECT CURRENT_DATABASE(), CURRENT_SCHEMA()`).
+None set, or `CREATE STAGE` fails? Use any schema the role can create a stage
+in; ask only if there isn't one.
 
 ```sql
 CREATE STAGE IF NOT EXISTS <DB>.<SCHEMA>.SEMANTIC_IMPORT_STAGE
   DIRECTORY = (ENABLE = TRUE) ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE');
 -- Desktop / CLI
 PUT 'file://<abs path>' @<DB>.<SCHEMA>.SEMANTIC_IMPORT_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
--- Snowsight
-COPY FILES INTO @<DB>.<SCHEMA>.SEMANTIC_IMPORT_STAGE
-  FROM 'snow://workspace/<workspace>/versions/live/<path>' FILES = ('<file>');
+-- Snowsight: <workspace> is the `name` from SHOW WORKSPACES (e.g. DEFAULT$),
+-- double-quoted if it has spaces: USER$.PUBLIC."Agentic BI"
+COPY FILES INTO @<DB>.<SCHEMA>.SEMANTIC_IMPORT_STAGE/
+  FROM 'snow://workspace/USER$.PUBLIC.<workspace>/versions/live/<folder>/'
+  FILES = ('<file>');
 LIST @<DB>.<SCHEMA>.SEMANTIC_IMPORT_STAGE;
 ```
+
+If the shell mangles `$` or `"`, run the SQL from a `.sql` file. If `FILES = (...)`
+errors, drop it and put the full file path at the end of `FROM`.
 
 Never use `cortex ws cp` to reach a stage — it copies to the sandbox and still
 reports success. File missing after one retry: give the clicks *Data » Databases
@@ -81,25 +97,39 @@ cortex agent-studio backend --tool tableau_analyze --parameters '{"file_path":"@
 cortex agent-studio backend --tool pbi_analyze --parameters '{"file_path":"@<DB>.<SCHEMA>.SEMANTIC_IMPORT_STAGE/<file>","validate_in_snowflake":true}'
 ```
 
-No `cortex` CLI? `SELECT SYSTEM$CORTEX_ANALYST_SVA_TOOL('<tool>', '<params json>');`
+No `cortex` CLI? One JSON argument:
+`SELECT SYSTEM$CORTEX_ANALYST_SVA_TOOL($${"tool":"tableau_analyze","parameters":{"file_path":"@<DB>.<SCHEMA>.SEMANTIC_IMPORT_STAGE/<file>"}}$$);`
+(Undocumented. Check the result for an embedded error even when the SQL succeeds.)
 
 Take from it: worksheets (Tableau) or tables (Power BI), `has_custom_sql`,
-non-Snowflake sources (`m_query_warnings`), and missing tables
-(`validation_warnings`).
+non-Snowflake sources (`m_query_warnings`), missing tables
+(`validation_warnings`), and calcs it can't convert (`warnings`;
+Power BI also `unsupported_measure_count`). Those calcs start the "couldn't
+find" list (`02-build/SKILL.md` » Metrics).
 
 ### 2b. Fix only what's broken
 
 | Sign | Action |
 |---|---|
-| Tableau published data source (`relation_count: 0`) | Ask for that source as `.tdsx`; stage and analyze it too. |
+| Tableau published data source (`relation_count: 0`) | Ask for that source as `.tdsx` (Tableau Cloud/Server: download the data source); stage it and pass it as `additional_files`. Several sources: also set `published_datasource_stub_name`. |
+| The `.tds`/`.tdsx` is itself only a server pointer | No documented fix. Tell the user plainly: the file holds no Snowflake connection, so the tables can't be read from it. Then find them through query history or `snowflake_object_search` and confirm the match with the user, or go to the Autopilot path. |
 | Power BI "does not contain a data model" | Ask for the model's `.pbix` or a `.pbit`. |
 | CSV / Excel / extract sources | Find the Snowflake tables behind the columns (`snowflake_object_search`, `INFORMATION_SCHEMA.COLUMNS`, query history). If it lands on an existing Semantic View, offer to reuse it. |
 
 ### 2c. One confirm, pre-filled
 
 One ask_user_question call with two questions: **tabs/tables** (all
-pre-selected) and **target `DATABASE.SCHEMA`** (default: the source tables'
-schema). Put one line above it with what you found.
+pre-selected) and **target `DATABASE.SCHEMA`**, pre-filled so the user can
+just accept:
+
+| Source tables live in | Default target |
+|---|---|
+| One schema | That schema |
+| Several schemas | The schema holding the fact table(s) the dashboard reads most; tie: the most-queried table's schema |
+| No write access there | First other choice the role can create in; say why |
+
+Put one line above it with what you found, including anything the file can't
+resolve (see 2b).
 
 ---
 

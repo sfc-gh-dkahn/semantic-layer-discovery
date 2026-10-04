@@ -13,8 +13,16 @@ a data model into an **agentic BI experience** the business can talk to.
 2. **Add natural-language instructions** for:
    - **Tone** — how answers should read for this audience.
    - **Scope** — what's in/out of bounds (keep it to the baseline domain first).
-   - **Business rules** — standing assumptions, default date ranges, filters and date defaults from the file's `usage_context` (Tableau) or page
-     filters and slicers (Power BI).
+   - **Business rules** — default filters and date ranges, taken from:
+     - Tableau: the file's `usage_context`.
+     - Power BI: page filters and slicers.
+     - Screenshots (Autopilot path): the filters and date range shown on screen.
+     - No file or screenshots: the `WHERE` clauses that repeat across the top
+       queries in query history.
+
+     If the source shows no default, set none rather than inventing one.
+   - **Known gaps** — tell the agent which metrics are on the "couldn't find"
+     list, so it says it can't answer them instead of approximating.
 
 3. **Governance travels with every answer.** The agent automatically inherits:
    - **RBAC** — users see only what their role permits.

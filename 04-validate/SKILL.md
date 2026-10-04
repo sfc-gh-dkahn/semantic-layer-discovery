@@ -9,11 +9,15 @@ the fastest proof point for broader adoption.
 ## 5a. Validate against the baseline
 
 - Write one question per worksheet (Tableau) or visual (Power BI) from its title,
-  fields, and `usage_context` filters, plus one per dropped metric, and ask the
-  agent each one.
+  fields, and `usage_context` filters, plus one per metric the user added from
+  the "couldn't find" list, and ask the agent each one.
 - Compare the agent's numbers to the dashboard's. They should match.
 - For any mismatch, trace it: usually a metric definition, a fact-grain
-  issue, or a missing filter in the Semantic View. Fix in the view, re-test.
+  issue, or a missing filter in the Semantic View. If the cause traces to SQL,
+  fix it in the view and re-test. If it doesn't, tell the user what doesn't
+  match and that you can't find why. Don't tweak the formula until the numbers
+  happen to match.
+- Report any "couldn't find" metrics still missing in the Step 5 summary.
 - **No file (Autopilot path):** with screenshots, ask one question per chart
   with the filters and date range shown, and match the numbers on screen. No
   screenshots: check against the top queries from query history instead.

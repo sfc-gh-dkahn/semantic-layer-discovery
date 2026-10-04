@@ -18,12 +18,14 @@ Delegate the conversion to the **`agent-studio`** skill:
 - Power BI → its **`import_powerbi`** workflow (`pbi_export`).
 - Tableau → its **`import_tableau`** workflow (`tableau_export`).
 
-Pass every value in so agent-studio skips its own questions: stage `file_path`,
-`include_worksheets` / `include_tables`, `target_database`, `target_schema`,
-`generate_descriptions: true`, and for Tableau `extract_usage_context: true`
-(feeds Steps 4-5), `use_custom_sql_in_definition` if `has_custom_sql`, and
-`additional_files` for a published `.tdsx`. Check each table in the result
-exists (`SHOW TABLES LIKE`); if not, find the match and re-export.
+Pass every value in so agent-studio skips its own questions:
+
+| Both tools | Tableau only | Power BI only |
+|---|---|---|
+| stage `file_path`, `semantic_model_name` (required), `target_database`, `target_schema`, `generate_descriptions: true` | `include_worksheets`, `extract_usage_context: true` (feeds Steps 4-5), `use_custom_sql_in_definition` if `has_custom_sql`, `additional_files` for a published `.tdsx` | `include_tables` |
+
+Check each table in the result exists (`SHOW TABLES LIKE`); if not, find the
+match and re-export.
 
 ## What carries in vs. what needs review
 
@@ -33,9 +35,9 @@ Carries in cleanly:
 - Field-level metadata.
 
 Needs review (flag to the customer):
-- **Some DAX / Tableau custom SQL may not transpile** — non-transpilable measures
-  are dropped or need a manual equivalent. Step 5 checks these against the
-  dashboard.
+- **Some DAX / Tableau calcs don't transpile** and get dropped. For each one,
+  look for its SQL in query history; if there's none, put it on the "couldn't
+  find" list (see `02-build/SKILL.md` » Metrics). Don't write a substitute.
 - Database/schema remapping — confirm imported table references point at the real
   Snowflake objects.
 
@@ -61,7 +63,7 @@ model.
 ## Exit criteria
 
 - Semantic View created from the import.
-- Key metrics verified present (dropped measures noted for Step 5).
+- Every dashboard metric is in the view or on the "couldn't find" list.
 - View descriptions/synonyms added; view treated as certified.
 
 Return to `02-build/SKILL.md` "After the branch", then continue to `03-agent/SKILL.md`.

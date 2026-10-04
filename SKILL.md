@@ -93,6 +93,10 @@ The file answers most questions, so don't ask them. You MUST:
 - When you need more than one input, ask for all of them in **one**
   ask_user_question call, with every answer pre-filled.
 - Pass every value into agent-studio's tools yourself so it never stops to ask.
+- **Never guess.** If you can't resolve something (a metric with no Snowflake
+  SQL, a table you can't find, a number that won't match), tell the user what
+  you couldn't resolve and what they need to do. Don't fill the gap with an
+  assumption.
 
 1. Read `01-intake/SKILL.md` and run Steps 1-2: get,
    stage, and analyze the file.

@@ -92,10 +92,19 @@ prefer import when a BI tool exists.
 
 ## Install
 
-Unzip into your personal skills directory:
+**Snowsight** (it can't reach GitHub, so don't paste the repo link):
+
+1. On your laptop, download this repo from GitHub (**Code » Download ZIP**) and
+   unzip it.
+2. Rename the folder to `semantic-layer-discovery` (drop the `-main` suffix).
+3. In Snowsight, open a **Workspace** and its Cortex Code chat.
+4. Click **+** » **Skills** » **Upload skill folder**, and pick the folder.
+5. Start it with `/semantic-layer-discovery`.
+
+**Desktop / CLI**
 
 ```
-~/.snowflake/cortex/skills/semantic-layer-discovery/
+git clone https://github.com/sfc-gh-dkahn/semantic-layer-discovery ~/.snowflake/cortex/skills/semantic-layer-discovery
 ```
 
 Restart Cortex Code so the skill is picked up. It loads automatically when your
