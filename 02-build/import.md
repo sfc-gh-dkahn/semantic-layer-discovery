@@ -56,24 +56,8 @@ confirmed per-table mappings. A remap cannot recover an M source dropped at pars
 Keep YAML operations inside agent-studio. A blocked metric or declined approval
 pauses the affected work; do not silently proceed to agent creation.
 
-## Identity / reference-data is a SEPARATE track
-
-Importing a workbook gives you the **model** — relationships, measures,
-calculations. It does **not** fix inconsistent underlying data. If the same
-entity (a supplier, customer, product, or location) appears under different
-names or IDs across source systems, importing the dashboard will not reconcile
-them — the Semantic View will faithfully reproduce the ambiguity.
-
-Set this expectation with the customer explicitly:
-- **This step:** import the dashboard's definitions into a Semantic View.
-- **A distinct effort:** master-data / reference-data / identity resolution —
-  agreeing on one canonical key per entity and mapping every source to it.
-
-Do not let the two be conflated in scope or timeline. The import can proceed
-now; the identity work is its own project (often with its own business owners,
-e.g. Procurement for supplier identity) and should be quoted/sequenced
-separately. Flag any identity gaps you find, but keep this step focused on the
-model.
+If identity inconsistencies affect the baseline, flag them and scope remediation
+separately; metadata import does not reconcile entities.
 
 ## Exit criteria
 

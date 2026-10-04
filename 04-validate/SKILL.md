@@ -1,8 +1,7 @@
 # Step 5 — Validate, iterate, and ship
 
 Prove the agent against the **original baseline dashboard** from Step 1, harden it
-with Verified Queries, then surface it where users work. One dashboard replaced is
-the fastest proof point for broader adoption.
+with Verified Queries, then surface it where users work.
 
 ---
 
@@ -52,13 +51,6 @@ after the non-admin access check from Step 4 passes:
 - **Streamlit app, App Runtime app, or Dashboard (Private Preview)** — offered next in **Step 6**
   (`05-app/SKILL.md`); the customer picks one first.
 
-## 5d. Then — and only then — expand
-
-Once the single baseline is replaced and trusted, repeat the path with the next
-dashboard. Resist widening scope before the first proof point lands.
-
----
-
 ## Exit criteria
 
 - Agent answers all questions in the accepted scope with matching results;
@@ -69,9 +61,3 @@ dashboard. Resist widening scope before the first proof point lands.
   a next dashboard only after this proof point; it is not a delivery blocker.
 - Then proceed to **Step 6** (`05-app/SKILL.md`), which asks the customer what to
   build (or to skip) before building anything.
-
-## Optional follow-ups
-
-- Schedule this as a repeatable engagement per dashboard.
-- If governance/trust is a stakeholder concern, revisit `03-agent/SKILL.md`
-  guardrails and confirm RBAC/RLS/masking behavior with the customer's security team.

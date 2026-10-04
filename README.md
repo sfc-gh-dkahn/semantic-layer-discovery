@@ -65,23 +65,6 @@ Screenshots/no usable model use the metadata path with confirmed definition evid
 
 ---
 
-## How to run it (facilitator notes)
-
-1. **Fewest useful touches.** Extract first, pre-fill the scope/destination
-   confirmation, and consolidate only material gaps. Preserve delegated approvals.
-2. Carry one **baseline record** through every step. Missing results need not block
-   candidate construction, but they block claims of dashboard parity. Keep source
-   mappings separate from where the new view is deployed.
-3. Keep the customer anchored on **one** baseline dashboard through Step 5.
-   Resist scope creep until the first agent is validated and shipped.
-4. At Step 3, route on content readiness and hand off to the `agent-studio`
-   skill for the actual import (`import_powerbi` / `import_tableau`) or build
-   (`creation` / Autopilot).
-5. **Identity/reference-data is a separate track.** Importing a dashboard gives
-   you the model; it does NOT reconcile the same entity appearing under different
-   names/IDs across systems. Flag identity gaps, but scope and quote that work
-   separately (see `02-build/import.md`).
-
 ## What "done" looks like
 
 - The agent answers the baseline dashboard's questions with **matching numbers**.
@@ -120,8 +103,7 @@ request matches the triggers above.
 
 ## Dependencies
 
-- The installed **`agent-studio`** skill (for import/build mechanics).
-- For Step 4, the **`agent-studio`** skill (agent creation).
+- The installed **`agent-studio`** skill for semantic view import/build and agent creation.
 - For Step 6, the skill for the chosen option and surface:
 
   | Option | Desktop / CLI | Snowsight |
@@ -129,21 +111,3 @@ request matches the triggers above.
   | Streamlit app | `developing-with-streamlit-in-snowflake` | `streamlit-in-workspaces` |
   | App Runtime app | `snowflake-apps` + `sar-actions-desktop` | `snowflake-apps` + `sar-actions-workspaces` |
   | Dashboard (Private Preview) | Check for a CoWork Dashboard skill; if none, build in Snowsight Cortex Code | `dashboard` |
-
-- No bundled scripts — the front end is generated per customer at run time.
-
-## File map
-
-```
-semantic-layer-discovery/
-├── README.md            this guide
-├── SKILL.md             manifest + 6-step flow + routing rule
-├── 01-intake/SKILL.md   Steps 0-2 (Cortex Sense, surface, upload + analyze)
-├── 02-build/
-│   ├── SKILL.md         Step 3 router
-│   ├── import.md        Power BI / Tableau import path (+ identity callout)
-│   └── autopilot.md     from-scratch / Autopilot path
-├── 03-agent/SKILL.md    Step 4
-├── 04-validate/SKILL.md Step 5
-└── 05-app/SKILL.md      Step 6 (Streamlit / App Runtime / Dashboard)
-```

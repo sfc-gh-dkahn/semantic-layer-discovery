@@ -48,11 +48,7 @@ Prefer importing usable definitions; a supported extension alone does not prove
 the model is present or the required calculations will convert. Recover missing
 dependencies without restarting intake. Preserve partial results on fallback.
 
-## Deliverables — Definition of Done (this is a SETUP skill, not just discovery)
-
-This skill is not complete until **real Snowflake objects exist**. Discovery
-(Steps 1-2) is only the front half; the run is done only when ALL of these are
-true:
+## Completion criteria
 
 1. A **Semantic View object exists** in Snowflake (created via import or
    Autopilot, or verified for reuse in Step 3) — verifiable with
@@ -100,6 +96,4 @@ Extract first; ask only for missing information that materially affects the next
 
 ## Guiding principle
 
-**One dashboard replaced is the fastest proof point for broader adoption.** Keep
-the customer anchored on a single, trusted baseline all the way through Step 5 —
-resist scope creep until the first agent is validated and shipped.
+Complete and validate one baseline before expanding scope.
