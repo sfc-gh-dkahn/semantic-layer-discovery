@@ -13,7 +13,8 @@ the result is ready for an agent.
 | Usable Tableau workbook/source or model-owning Power BI artifact; source mappings resolved | `02-build/import.md` | Convert the selected scope, then reconcile coverage |
 | Missing published-source sidecar, thin report, or unresolved required source | Intake 2b | Recover the specific dependency or mapping; keep completed work |
 | Usable definitions but unsupported required calculations | Import supported scope, then the coverage gate below | Seek approved implementation from exact definitions, not another file-format loop |
-| No usable artifact available, or agreed metadata-based fallback | `02-build/autopilot.md` | Carry the baseline and any retained definitions into the build; do not start discovery over |
+| No usable artifact available, or agreed metadata-based fallback, **and the required source tables exist in Snowflake** | `02-build/autopilot.md` | Carry the baseline and any retained definitions into the build; do not start discovery over |
+| Required source data is not in Snowflake | Pause | Report the blocker: data must land in Snowflake first. Neither import nor Autopilot can proceed. |
 
 Prefer import when it preserves usable business definitions. Source-only Tableau
 files do not need to be discarded for lack of worksheets. If a required dependency
