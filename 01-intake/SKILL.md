@@ -60,12 +60,14 @@ can still be useful; it just needs separate dashboard context.
 - Screenshots or `none`: skip staging/analyze, but complete the baseline record
   and gap-only confirmation in 2c before the build router. With `none`, ask for
   the intended domain/questions and an approved reference query/result if absent.
+  Before the router, confirm the data is in Snowflake (1b-3 "Find it" row).
 - Snowsight: find the file yourself. The sandbox mounts only the **default**
   workspace at `/workspace`, so try `find /workspace -maxdepth 4 -type f \(
   -iname '*.twb*' -o -iname '*.tds*' -o -iname '*.pbi[tx]' \)` first. Not
   there? The file is in another workspace: run `SHOW WORKSPACES` and use the
-  `name` column in 1c. A file dropped into the chat is not in `/workspace`;
-  ask for a workspace upload instead.
+  `name` column in 1c. A BI file dropped into the chat is not in `/workspace`;
+  ask for a workspace upload instead. A screenshot pasted into the chat is fine:
+  read it from the conversation as baseline evidence; don't look for it on disk.
 - One dashboard only — do not bulk-import the BI estate.
 - File name has `[` or `]`: stage downloads fail. Rename it (Desktop) or ask the
   user to rename it (Snowsight).
@@ -73,14 +75,15 @@ can still be useful; it just needs separate dashboard context.
 ### 1b-2. Check sources and pages locally (no question)
 
 Before staging a BI file, read its sources and, for Power BI, its pages. This
-skill covers dashboards built on Snowflake. If no source is Snowflake, the file
-is out of scope; say so and stop.
+skill covers dashboards whose **data is in Snowflake**, whether or not the file
+connects to Snowflake. Record each source table's connection; 1b-3 routes them.
 
 **Tableau.** `.twbx`/`.tdsx` are
 zip archives; `.twb`/`.tds` are plain XML. Both surfaces have a shell.
 
 ```bash
-unzip -o -q '<file>.twbx' -d /tmp/sld_check   # skip for .twb/.tds
+rm -rf /tmp/sld_check && mkdir -p /tmp/sld_check
+unzip -o -q '<file>.twbx' -d /tmp/sld_check   # .twb/.tds: copy it into /tmp/sld_check instead
 grep -ho "<connection [^>]*class='[a-z-]*'" /tmp/sld_check/*.tw[bs] 2>/dev/null \
   | grep -o "class='[a-z-]*'" | sort | uniq -c
 ```
@@ -91,14 +94,16 @@ is publish history, not a published source.
 | Finding | Meaning | Next |
 |---|---|---|
 | A `snowflake` connection | Importable | Stage (1c) |
-| A `sqlproxy` connection | Published-source stub | Stage (1c), then request the `.tds`/`.tdsx` (2b) |
+| A `sqlproxy` connection | Published-source stub | Ask for the named source's `.tds`/`.tdsx` now, in this turn. Run this check on it too: if it is also `sqlproxy`, it holds no tables; ask for a copy connected straight to Snowflake, or go to 1b-3 "Find it". Stage both (1c) |
+| A `hyper` extract next to a `snowflake` connection | Extract of a Snowflake source (unverified: `tableau_analyze` may reject nested Hyper) | Stage (1c). If analyze rejects it, route the extract's tables by 1b-3 "Find it" |
+| Other classes (`excel-direct`, `sqlserver`, `textscan`, …) | Not connected to Snowflake | 1b-3 |
 
 **Power BI.** `.pbix`/`.pbit` are zip archives. Power Query sources are in
-`DataMashup`: 8 header bytes, a 4-byte little-endian length, then a zip holding
+`DataMashup`: a 4-byte version, a 4-byte little-endian length, then a zip holding
 `Formulas/Section1.m`. Report pages are UTF-16 JSON in `Report/Layout`.
 
 ```bash
-mkdir -p /tmp/sld_check && unzip -o -q '<file>.pbix' -d /tmp/sld_check
+rm -rf /tmp/sld_check && mkdir -p /tmp/sld_check && unzip -o -q '<file>.pbix' -d /tmp/sld_check
 python3 - <<'PY'
 import io, json, re, struct, zipfile
 b = open('/tmp/sld_check/DataMashup', 'rb').read()
@@ -119,6 +124,7 @@ PY
 | Finding | Meaning | Next |
 |---|---|---|
 | `Source =` uses `Snowflake.Databases` | Importable | Stage (1c) |
+| `Source =` uses another connector (`Sql.Database`, `Excel.Workbook`, `Csv.Document`, `SharePoint.*`, embedded rows) | Not connected to Snowflake | 1b-3 |
 | No `DataMashup` or no `Section1.m` | Thin report or live connection | 2b "thin report" |
 
 Keep the page list. Measures referenced on the baseline page become the
@@ -127,6 +133,21 @@ hidden or KPI-only measure) is a gap to ask about, not something to infer.
 
 Read only the XML/JSON/M text. Do not open `.hyper` files, decompress
 `DataModel`, or run file-supplied code.
+
+### 1b-3. Route each required table by where its data lives
+
+Check every table the baseline page needs, not just whether the file has any
+Snowflake source. One table can block a metric even when the rest import.
+
+| Required table | Route |
+|---|---|
+| Connected to Snowflake in the file | Import (1c onward) |
+| Not connected, but the data is in Snowflake | **Find it:** ask where it lives, or search metadata/query history for matching objects and have the user confirm. Then build from metadata (`02-build/autopilot.md`), keeping the file's formulas and page context |
+| Not in Snowflake | Stop for that table. Say which tables, and the next step: load the data into Snowflake, or repoint the workbook / Power Query source to Snowflake, then re-run the skill |
+
+Mixed files: import the Snowflake-connected tables and route the rest by this
+table. Never let a non-Snowflake table reach export, where it is silently
+dropped. If every required table stops, stop the run with the same next step.
 
 ### 1c. Stage it (no question)
 
@@ -196,7 +217,7 @@ Tableau `usage_context` arrives at export. Mark unavailable context as missing.
 
 | Sign | Action |
 |---|---|
-| Published Tableau source reference (a `sqlproxy` connection in the XML) with missing relations. `relation_count: 0` without a stub is not this case. | Request the owning `.tds`/`.tdsx`. Keep the workbook as the primary input; stage the sidecar for **export's** `additional_files`. Only the first sidecar is used; `published_datasource_stub_name` selects one stub, not a bulk merge. If the baseline needs several unresolved sources, explain the limit and agree a narrower scope or another build route. |
+| Published Tableau source reference (a `sqlproxy` connection in the XML) with missing relations. `relation_count: 0` without a stub is not this case. | Use the `.tds`/`.tdsx` requested in 1b-2 (ask now only if that was skipped). Keep the workbook as the primary input; stage the sidecar for **export's** `additional_files`. Only the first sidecar is used; `published_datasource_stub_name` selects one stub, not a bulk merge. If the baseline needs several unresolved sources, explain the limit and agree a narrower scope or another build route. |
 | Tableau source-only `.tds`/`.tdsx` | Keep usable definitions; collect the baseline page/results separately. Do not require a workbook solely to import source metadata. |
 | Power BI thin report / missing model | Request the model owner's PBIT or model-containing PBIX, not another export of the same thin report. |
 | Unsupported artifact (for example bare Hyper or PBIP) | Explain the missing container/definitions and request a supported owning artifact; renaming an extension is not conversion. |
