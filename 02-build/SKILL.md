@@ -1,59 +1,63 @@
 # Step 3: Create the Semantic View (the branch point)
 
-This is the one decision point in the whole workflow. Model the tables,
-relationships, metrics, and descriptions from Step 2 into a **Semantic View** —
-but *how* you create it depends on the file from Step 1.
+Model the confirmed baseline from Step 2 into a **Semantic View**. The artifact's
+contents determine the route; the required metric coverage determines whether
+the result is ready for an agent.
 
 ---
 
-## The route (no question — the Step 1 file decides)
+## The route (use the intake findings, not just the extension)
 
-| File | Route to | Why |
+| Readiness | Route to | Next action |
 |---|---|---|
-| **Power BI** (`.pbit` / `.pbix`) | `02-build/import.md` → Power BI path | DAX measures, relationships, calcs carry directly in |
-| **Tableau** (`.twb` / `.twbx` / `.tds` / `.tdsx`) | `02-build/import.md` → Tableau path | Datasource joins, calcs, and fields carry in |
-| **Screenshots (any other BI tool) or `none`** | `02-build/autopilot.md` | Build fresh from Snowflake metadata via Autopilot |
+| Usable Tableau workbook/source or model-owning Power BI artifact; source mappings resolved | `02-build/import.md` | Convert the selected scope, then reconcile coverage |
+| Missing published-source sidecar, thin report, or unresolved required source | Intake 2b | Recover the specific dependency or mapping; keep completed work |
+| Usable definitions but unsupported required calculations | Import supported scope, then the coverage gate below | Seek approved implementation from exact definitions, not another file-format loop |
+| No usable artifact available, or agreed metadata-based fallback | `02-build/autopilot.md` | Carry the baseline and any retained definitions into the build; do not start discovery over |
 
-**Prefer import when a BI tool exists.** The workbook already encodes
-business-validated definitions, so importing is faster and more trustworthy than
-rebuilding from scratch — and it maps directly to the baseline you chose in Step 1.
+Prefer import when it preserves usable business definitions. Source-only Tableau
+files do not need to be discarded for lack of worksheets. If a required dependency
+cannot be supplied, agree fallback, reduced scope, or a pause before continuing.
+A staged owning Tableau sidecar is ready to try at export; analyze does not merge
+it, so do not wait for a re-analyzed workbook to show the merged relations.
 
 ---
 
-## Metrics: find each one, trace its SQL, or say you can't (both paths)
+## Required coverage gate (both paths, before agent creation)
 
-Every metric on the dashboard needs a Snowflake SQL definition in the view.
+After export/generation, compare the candidate to the baseline record by **named
+required metric**, not just total counts. Record its definition source, target
+expression, dependencies, and status:
 
-1. **List the metrics.** Take them from the file (measures, calculated fields)
-   and from screenshots (KPI tiles, chart values). This list is the target.
-2. **Find each one's SQL**, in this order:
-   - **The file.** DAX measures and Tableau calcs that import transpiles.
-   - **Query history.** BI tools that query Snowflake live (Tableau live
-     connections, Power BI DirectQuery, Domo, Hex, Sigma, ...) push their calcs
-     down as SQL. Find the BI service user's queries on the source tables and
-     read the expression behind each metric (`SUM(...) / NULLIF(...)`,
-     `COUNT(DISTINCT ...)`, `CASE WHEN ...`).
-   - Match on the metric name, column alias, or the numbers in the screenshot.
-3. **Can't find it? Say so; don't guess.** A calc can stay inside the BI tool:
-   import extracts, Power BI import mode, DAX that doesn't transpile, or table
-   calcs (running totals, rank, % of total) computed after the query. Then no
-   SQL exists in the file or query history. Leave it out of the view and list
-   it for the user:
+| Status | Action |
+|---|---|
+| Converted/implemented with resolved sources | Review grain, joins, filters, and dependencies; queue result validation for Step 5 |
+| Definition found, translation unsupported | Preserve the exact DAX/Tableau formula and evaluation context. Explain the limitation and ask approval for a separate SQL implementation through agent-studio, or explicit exclusion |
+| Definition or dependency missing | Request the specific formula/context/source, accept an explicitly reduced scope, or pause; never infer a formula from a name |
 
-   > Couldn't find Snowflake SQL for: **Margin %**, **YoY Growth**. These run
-   > inside Power BI, not Snowflake. Add them to the semantic view yourself
-   > (or give me the SQL and I'll add them); I'll validate them in Step 5.
+Inspect errors/warnings and missing columns, filters, or relationships as well as
+measures. Required dependencies dropped during filtering or validation block the
+metric even if its name survives. Re-run the gate after remediation.
 
-   Never write a formula from the metric's name, or fill one in from a
-   "standard" definition.
+**Query history supports recovery; it is not universal formula recovery.** It may
+contain refresh/extract-build SQL or only part of a DirectQuery computation.
+Corroborate candidate SQL against the definition, source mapping, grain, and
+filter context. A name, alias, or matching snapshot alone is insufficient. Missing
+SQL does not prove the formula is missing or that it runs only inside the BI tool.
+
+Proceed only when the **approved scope** contains at least one answerable baseline
+question and all its required metrics have implementations and resolved dependencies.
+An empty export does not pass. If the user accepts a subset, retain the original target
+list and record exclusions explicitly. Unsupported does not mean unimplementable;
+it also does not authorize an unreviewed approximation.
 
 ## After the branch
 
-Both paths produce a **Semantic View** (GA). Once it exists:
-- Every dashboard metric is either in the view with its traced SQL, or on the
-  "couldn't find" list shown to the user.
+Both paths produce a **candidate Semantic View**. Before Step 4:
+- Required coverage passes for the approved scope and the deployed object exists.
 - Add descriptions and synonyms so Cortex Analyst understands business language.
-- Mark/treat the view as **certified** — Step 4 wires the agent to a certified view.
+- Carry the baseline record, coverage table, and exclusions into the agent step.
+- Do not certify yet: Step 5 must validate and accept the results first.
 
 Then proceed to `03-agent/SKILL.md` (Step 4).
 
@@ -65,8 +69,11 @@ description of how one would be made:
 - Power BI / Tableau import → its `import_powerbi` / `import_tableau` workflows.
 - Build from metadata → its `creation` workflow (Autopilot / fastgen).
 
+If the user approved reusing an existing view, inspect it through agent-studio and
+apply the same coverage gate; do not create a duplicate merely to complete a step.
+
 Do **not** treat Step 3 as complete until a Semantic View object exists and you
 have confirmed it (e.g. `SHOW SEMANTIC VIEWS` / `DESCRIBE SEMANTIC VIEW`).
-Explaining the steps without invoking the sub-skill and creating the object is a
-failure of this step. This skill orchestrates; `agent-studio` does the heavy
-lifting — but the object must actually get built here.
+An export or saved YAML alone is not a deployed view. Preserve delegated approval
+gates, including custom-view DDL and deployment. If approval or a required input
+is unavailable, report a blocked run and its next action, not a completed setup.

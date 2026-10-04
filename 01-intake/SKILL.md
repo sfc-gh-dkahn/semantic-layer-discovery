@@ -1,9 +1,9 @@
 # Steps 1-2: Discovery
 
 This covers the first two steps of the Path Forward: detect where the user is
-working, then get the baseline file into a stage and let agent-studio's
-Tableau / Power BI tools read it. The file answers the discovery questions —
-metrics, filters, tables, joins — so don't ask them.
+working, request the artifacts that own the definitions, and let agent-studio's
+Tableau / Power BI tools inspect them. Extract what is available; ask only for
+missing dependencies or baseline context, not a generic discovery questionnaire.
 
 ---
 
@@ -34,14 +34,32 @@ uname -s; test -d /workspace && echo cloud_mount
 (No documented environment variable names the surface, so probe the
 filesystem.)
 
-### 1b. Ask for the file (one question)
+### 1b. Request owning artifacts and one baseline (one interaction)
 
-| Surface | Ask |
-|---|---|
-| Desktop / CLI | "Path to your Tableau or Power BI file? Using another BI tool (Domo, Hex, ...)? Paste dashboard screenshots instead. (or `none`)" |
-| Snowsight | "Upload your Tableau or Power BI file into this workspace, then say `done`. Using another BI tool (Domo, Hex, ...)? Paste dashboard screenshots instead. (or `none`)" |
+If the user already supplied files, inspect those first. Otherwise use
+ask_user_question, showing only the relevant tool guidance when it is known:
 
-- Screenshots or `none` -> skip to `02-build/autopilot.md`.
+> Choose one dashboard/report page. On Desktop/CLI, give its file path(s);
+> in Snowsight, upload the files into the workspace and say `done`.
+> - **Tableau:** its `.twb` or `.twbx` workbook. If it uses a published data
+>   source, also include that source's `.tds` or `.tdsx`, if available.
+> - **Power BI:** preferably a `.pbit` exported from the model-owning file
+>   (Desktop: File > Export > Power BI template), or a model-containing `.pbix`.
+>   If the report connects to a shared model, obtain that artifact from its owner;
+>   another copy of the thin report will not supply the underlying definitions.
+> - Include a screenshot or results export of the chosen page with filters and
+>   date range visible. If unavailable, say so. No usable model file? Screenshots
+>   from any BI tool are still useful; use `none` if there is no dashboard.
+
+Packaged files may contain business rows; request definitions without rows when
+available. Packaging does not make unsupported calculations convertible. Do not
+ask users to change live/extract or Import/DirectQuery mode just to import metadata.
+Screenshots provide scope/results, not proof of a formula. A source-only file
+can still be useful; it just needs separate dashboard context.
+
+- Screenshots or `none`: skip staging/analyze, but complete the baseline record
+  and gap-only confirmation in 2c before the build router. With `none`, ask for
+  the intended domain/questions and an approved reference query/result if absent.
 - Snowsight: find the file yourself. The sandbox mounts only the **default**
   workspace at `/workspace`, so try `find /workspace -maxdepth 4 -type f \(
   -iname '*.twb*' -o -iname '*.tds*' -o -iname '*.pbi[tx]' \)` first. Not
@@ -84,7 +102,8 @@ reports success. File missing after one retry: give the clicks *Data » Database
 
 ## Step 2 — Map data objects, questions, and business definitions
 
-The analyze tools read these from the file; don't ask for them.
+Analyze establishes available model structure, not complete dashboard semantics
+or final conversion coverage.
 
 ### 2a. Analyze it (no question)
 
@@ -101,26 +120,42 @@ No `cortex` CLI? One JSON argument:
 `SELECT SYSTEM$CORTEX_ANALYST_SVA_TOOL($${"tool":"tableau_analyze","parameters":{"file_path":"@<DB>.<SCHEMA>.SEMANTIC_IMPORT_STAGE/<file>"}}$$);`
 (Undocumented. Check the result for an embedded error even when the SQL succeeds.)
 
-Take from it: worksheets (Tableau) or tables (Power BI), `has_custom_sql`,
-non-Snowflake sources (`m_query_warnings`), missing tables
-(`validation_warnings`), and calcs it can't convert (`warnings`;
-Power BI also `unsupported_measure_count`). Those calcs start the "couldn't
-find" list (`02-build/SKILL.md` » Metrics).
+Parse the response's stringified `result` and check success. Retain worksheets
+(Tableau), resolved tables/measures (Power BI), `has_custom_sql`, and warnings.
+Power BI's analyze validation warnings are under `validation.validation_warnings`;
+`m_query_warnings` describe unresolved sources. `unsupported_measure_count` is
+an **export** result, not an analyze field. Final coverage is checked after export.
+Power BI's documented tools do not expose report-page/visual/slicer context;
+Tableau `usage_context` arrives at export. Mark unavailable context as missing.
 
 ### 2b. Fix only what's broken
 
 | Sign | Action |
 |---|---|
-| Tableau published data source (`relation_count: 0`) | Ask for that source as `.tdsx` (Tableau Cloud/Server: download the data source); stage it and pass it as `additional_files`. Several sources: also set `published_datasource_stub_name`. |
-| The `.tds`/`.tdsx` is itself only a server pointer | No documented fix. Tell the user plainly: the file holds no Snowflake connection, so the tables can't be read from it. Then find them through query history or `snowflake_object_search` and confirm the match with the user, or go to the Autopilot path. |
-| Power BI "does not contain a data model" | Ask for the model's `.pbix` or a `.pbit`. |
-| CSV / Excel / extract sources | Find the Snowflake tables behind the columns (`snowflake_object_search`, `INFORMATION_SCHEMA.COLUMNS`, query history). If it lands on an existing Semantic View, offer to reuse it. |
+| Published Tableau source reference with missing relations (`relation_count: 0` is a clue, not proof) | Request the owning `.tds`/`.tdsx`. Keep the workbook as the primary input; stage the sidecar for **export's** `additional_files`. Only the first sidecar is used; `published_datasource_stub_name` selects one stub, not a bulk merge. If the baseline needs several unresolved sources, explain the limit and agree a narrower scope or another build route. |
+| Tableau source-only `.tds`/`.tdsx` | Keep usable definitions; collect the baseline page/results separately. Do not require a workbook solely to import source metadata. |
+| Power BI thin report / missing model | Request the model owner's PBIT or model-containing PBIX, not another export of the same thin report. |
+| Unsupported artifact (for example bare Hyper or PBIP) | Explain the missing container/definitions and request a supported owning artifact; renaming an extension is not conversion. |
+| Source pointer, unresolved M source, or external data | Check retained source metadata first, then discover and confirm compatible Snowflake objects. An extract does not automatically erase source definitions. Do not assume rows or matching column names establish lineage, or that a schema remap recovers a table dropped during parsing. |
+
+Record the missing dependency and why the replacement helps. Retry only when
+the artifact, mapping, or relevant parameters change. If the owner cannot provide
+it, offer metadata-based build with the evidence already collected, or pause.
+Do not cycle file formats for a translator limitation or restart successful work.
 
 ### 2c. One confirm, pre-filled
 
-One ask_user_question call with two questions: **tabs/tables** (all
-pre-selected) and **target `DATABASE.SCHEMA`**, pre-filled so the user can
-just accept:
+Maintain one **baseline record** in the working project, populated from supplied
+evidence: chosen dashboard/page; required metrics/questions and their definition
+sources; grouping/filter/date context and refresh cutoff; expected results (or
+missing); primary artifact and dependencies; original source FQNs; selected
+scope; deployment FQN; optional confirmed source remap; unresolved gaps.
+
+Use one ask_user_question call to confirm **baseline scope** and **deployment
+`DATABASE.SCHEMA`**, adding only material missing context. Propose the worksheets
+or metrics belonging to that baseline, not every object in a shared workbook/model.
+Retain supporting tables, dependent measures, and join keys. If page-to-model
+mapping cannot be inferred, ask rather than claiming table selection identifies a page.
 
 | Source tables live in | Default target |
 |---|---|
@@ -128,16 +163,23 @@ just accept:
 | Several schemas | The schema holding the fact table(s) the dashboard reads most; tie: the most-queried table's schema |
 | No write access there | First other choice the role can create in; say why |
 
-Put one line above it with what you found, including anything the file can't
-resolve (see 2b).
+This is the **deployment destination**, not a source-table remap. Preserve each
+original source FQN; only record a remap when the user confirms an actual source
+location change. Do not pass the deployment schema as an exporter remap.
+
+Show the proposed baseline and remaining gaps in the confirmation. Missing
+expected results may remain pending during candidate construction, but Step 5
+cannot claim parity until evidence is supplied. Treat visible filter selections
+as the test context, not automatically as permanent agent defaults.
 
 ---
 
 ## Exit criteria for discovery
 
 Before moving to Step 3, you should have:
-- One staged baseline file (or screenshots, or `none`).
-- Its analyze result: tabs/tables, source tables, any fixes made.
-- The confirmed tabs and target schema.
+- Baseline record with confirmed scope and deployment destination.
+- Staged usable artifacts and analyze results when present; otherwise an explicit
+  no-model/fallback decision. Missing dependencies have a specific next action.
+- Required definitions and expected results captured or explicitly marked missing.
 
 Then proceed to `02-build/SKILL.md` and apply the routing rule.

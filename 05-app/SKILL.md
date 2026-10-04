@@ -4,6 +4,8 @@ Package the validated Semantic View + Cortex Agent into a front end the customer
 can open and share — not just objects in a schema. The customer picks one of
 three: a **Streamlit app**, an **App Runtime app**, or a **Dashboard** (Private Preview). This runs
 **after Step 5 validation passes**; never build on an unvalidated agent.
+If Step 5 accepted a subset, all KPIs/questions below mean that validated subset;
+label its exclusions rather than presenting it as the full dashboard replacement.
 
 This file defines *what* each option must contain. Delegate the mechanics to the
 skill for the option and the surface the user is in:

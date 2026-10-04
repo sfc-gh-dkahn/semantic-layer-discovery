@@ -1,6 +1,6 @@
 ---
 name: semantic-layer-discovery
-description: "Guide a customer end-to-end through evaluating and standing up a governed, agentic BI experience on Snowflake, following the 'Quick to Evaluate, Even Quicker to Production' path. Use when a user wants to: run semantic-layer discovery, walk a customer through building a semantic layer/semantic view, replace or modernize an existing dashboard/report with a Cortex Agent, or decide whether to import Power BI/Tableau vs. build from scratch. Ends by building the customer's choice of front end (Streamlit app, App Runtime app, or Dashboard in CoWork (PrPr)) over the validated semantic view and agent. Detects Snowsight vs Desktop/CLI, has the user upload the Tableau/Power BI file to a stage with the right tool, and analyzes it with agent-studio's built-in tools; with no file it routes to Autopilot/build-from-scratch. Delegates the actual semantic-view import/build mechanics to the 'agent-studio' skill."
+description: "Guide a customer from one dashboard to a validated Semantic View and Cortex Agent with minimal repeated discovery. Use for semantic-layer discovery, building a semantic view with a customer, replacing a dashboard with an agent, or choosing Power BI/Tableau import vs. Autopilot. Requests model-owning artifacts and baseline evidence, routes on content readiness, reconciles required coverage, and validates before sharing. Delegates implementation to agent-studio and optionally builds the customer's chosen front end over the validated scope."
 ---
 
 # Semantic Layer Discovery
@@ -8,9 +8,9 @@ description: "Guide a customer end-to-end through evaluating and standing up a g
 ## When to Use
 
 Load this skill when you are helping a customer go from "we have dashboards" to a
-**governed, agentic BI experience** — a certified Semantic View wired to a Cortex
-Agent. It front-loads discovery, then routes to the correct build path depending
-on whether the customer already has Power BI or Tableau.
+**governed, agentic BI experience** — a validated Semantic View wired to a Cortex
+Agent. It front-loads artifact checks, then routes on usable definitions and
+source mappings rather than the BI product or file extension alone.
 
 Triggers: *semantic layer discovery, semantic model discovery, enable a semantic
 layer, walk me through semantic setup, sit with a customer on semantics, replace a
@@ -19,7 +19,7 @@ dashboard with an agent, agentic BI path, build a semantic view with a customer.
 ## What this skill is
 
 An **orchestrator**, not a re-implementation. It sequences the customer through
-the five-step "Path Forward" and, for the mechanical work of creating the semantic
+the six-step "Path Forward" and, for the mechanical work of creating the semantic
 view (importing Power BI/Tableau or building from metadata), it hands off to the
 existing **`agent-studio`** skill.
 
@@ -31,31 +31,22 @@ Step 0 (optional, Cortex Sense — Public Preview Nov 2026)
   issues from Snowflake metadata, query history, dbt, Tableau, and Power BI —
   BEFORE building Semantic Views.
 
-Step 1  Choose ONE existing dashboard: upload its file     -> 01-intake/SKILL.md
-        (or screenshots); staged with the right tool for
-        Snowsight or Desktop/CLI
-Step 2  Map data objects, questions, business definitions:
-        agent-studio's Tableau / Power BI tools read the file -> 01-intake/SKILL.md
-Step 3  Create the Semantic View                            -> 02-build/SKILL.md
-          ├─ HAS a Power BI / Tableau file -> 02-build/import.md
-          └─ screenshots or `none`       -> 02-build/autopilot.md
-Step 4  Create a Cortex Agent on the certified view         -> 03-agent/SKILL.md
-Step 5  Validate against the baseline, add VQRs, ship        -> 04-validate/SKILL.md
+Step 1  Request owning artifacts + ONE dashboard baseline   -> 01-intake/SKILL.md
+Step 2  Analyze, resolve dependencies, confirm scope         -> 01-intake/SKILL.md
+Step 3  Build and reconcile required metric coverage         -> 02-build/SKILL.md
+          Import usable definitions; recover missing dependencies first
+          Build from metadata when no usable model is available
+Step 4  Create a test agent on the candidate view            -> 03-agent/SKILL.md
+Step 5  Validate parity, add VQRs, accept and ship             -> 04-validate/SKILL.md
 Step 6  (opt-in) ASK: Streamlit app, App Runtime app, or Dashboard (PrPr) -> 05-app/SKILL.md
 ```
 
-## The routing rule (no question)
+## Routing
 
-The file from **Step 1** decides the route — don't ask "Do you have Power BI or
-Tableau?":
-
-- **Power BI** (`.pbit` / `.pbix`) -> `02-build/import.md` (Power BI path)
-- **Tableau** (`.twb` / `.twbx` / `.tds` / `.tdsx`) -> `02-build/import.md` (Tableau path)
-- **Screenshots (any other BI tool) or `none`** -> `02-build/autopilot.md` (build from metadata / Autopilot)
-
-Importing carries **DAX measures, relationships, and calculations directly in**,
-so if the customer has a BI tool, prefer import — it reflects already-validated
-business definitions and is faster than starting cold.
+Use the content-based decision table in `02-build/SKILL.md` after intake.
+Prefer importing usable definitions; a supported extension alone does not prove
+the model is present or the required calculations will convert. Recover missing
+dependencies without restarting intake. Preserve partial results on fallback.
 
 ## Deliverables — Definition of Done (this is a SETUP skill, not just discovery)
 
@@ -64,43 +55,42 @@ This skill is not complete until **real Snowflake objects exist**. Discovery
 true:
 
 1. A **Semantic View object exists** in Snowflake (created via import or
-   Autopilot in Step 3) — verifiable with `SHOW SEMANTIC VIEWS` / `DESCRIBE
-   SEMANTIC VIEW`.
-2. A **Cortex Agent exists** and is wired to that certified view (Step 4).
-3. The agent has been **validated** against the baseline dashboard's questions
-   and **surfaced** (CoWork or an app), with Verified Queries
-   added (Step 5).
+   Autopilot, or verified for reuse in Step 3) — verifiable with
+   `SHOW SEMANTIC VIEWS` / `DESCRIBE SEMANTIC VIEW`.
+2. A **Cortex Agent exists** and is wired to that view (Step 4).
+3. The agent has been **validated** against the agreed baseline and **surfaced**
+   (CoWork or an app), with Verified Queries added (Step 5). Record whether this
+   proves dashboard parity or reference-query correctness, and any accepted exclusions.
 4. The customer was **asked what to build** (Streamlit app, App Runtime app,
    Dashboard (Private Preview), or not now). If they chose one, it **exists** and shows the
    baseline KPIs from the Semantic View (plus an agent chat for the two app
    options), with access granted to the customer's role(s) (Step 6). If not,
    record that it was declined.
 
-If you finish the conversation without creating these objects, the skill has
-**failed** — you produced discovery notes, not a semantic layer. Do not stop at
-Step 2.
+Continue through creation when inputs and approvals allow it. If a required
+definition, source, baseline, or approval is unavailable, save progress and report
+the specific blocker; do not fabricate success to satisfy this definition of done.
+A user-approved subset is a partial delivery, not replacement of the full dashboard.
 
 ## How to run this skill
 
 ### Interaction rule (REQUIRED) — fewest touches
 
-The file answers most questions, so don't ask them. You MUST:
-- Ask only for the file (Step 1), one pre-filled confirm (tabs + schema), and the
-  Step 6 build choice. Anything else is a **fix**, asked only when something is
-  wrong.
-- Never ask for business context, metric definitions, consumers, or "do you
-  have Power BI or Tableau?" — read them from the file.
-- When you need more than one input, ask for all of them in **one**
-  ask_user_question call, with every answer pre-filled.
-- Pass every value into agent-studio's tools yourself so it never stops to ask.
-- **Never guess.** If you can't resolve something (a metric with no Snowflake
-  SQL, a table you can't find, a number that won't match), tell the user what
-  you couldn't resolve and what they need to do. Don't fill the gap with an
-  assumption.
+Extract first; ask only for missing information that materially affects the next step.
+- Use the artifact request in intake, then one pre-filled scope/destination
+  confirmation. Consolidate dependency or definition gaps rather than asking piecemeal.
+- If files are already supplied, inspect them before requesting replacements.
+- Pass the baseline record, analyze results, and prior approvals into delegated
+  skills. Reuse them where supported; do not promise that parameters bypass a
+  sub-skill's mandatory checks or approvals. Do not repeat resolved questions.
+- **Never guess.** Missing source SQL is not the same as a missing definition.
+  Preserve exact BI formulas and context; ask before implementing unsupported logic.
+- Save the baseline record and coverage status in the working project, not in
+  the installed skill. Resume at the blocked step when new evidence arrives.
 
 1. Read `01-intake/SKILL.md` and run Steps 1-2: get,
    stage, and analyze the file.
-2. At Step 3, apply the routing rule above and read `02-build/SKILL.md`.
+2. At Step 3, read and apply the routing rule in `02-build/SKILL.md`.
 3. Continue through `03-agent/SKILL.md` (Step 4), `04-validate/SKILL.md` (Step 5), and
    `05-app/SKILL.md` (Step 6).
 4. For the actual semantic-view import or build, delegate to the `agent-studio`

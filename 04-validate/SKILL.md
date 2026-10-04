@@ -8,31 +8,46 @@ the fastest proof point for broader adoption.
 
 ## 5a. Validate against the baseline
 
-- Write one question per worksheet (Tableau) or visual (Power BI) from its title,
-  fields, and `usage_context` filters, plus one per metric the user added from
-  the "couldn't find" list, and ask the agent each one.
-- Compare the agent's numbers to the dashboard's. They should match.
-- For any mismatch, trace it: usually a metric definition, a fact-grain
-  issue, or a missing filter in the Semantic View. If the cause traces to SQL,
-  fix it in the view and re-test. If it doesn't, tell the user what doesn't
-  match and that you can't find why. Don't tweak the formula until the numbers
-  happen to match.
-- Report any "couldn't find" metrics still missing in the Step 5 summary.
-- **No file (Autopilot path):** with screenshots, ask one question per chart
-  with the filters and date range shown, and match the numbers on screen. No
-  screenshots: check against the top queries from query history instead.
+- Use the confirmed **baseline record**, not a fresh discovery round. Ask the
+  agent the agreed questions covering every required metric, including separately
+  implemented formulas. Do not assume the importer supplied all visual context.
+- Compare with the recorded expected results under the same filters, date range,
+  refresh cutoff, and access identity. Check relevant detail grain and totals,
+  plus important filter variants (especially ratios, LOD, and time calculations).
+  Agree any rounding/tolerance explicitly; one matching tile is not sufficient.
+- Diagnose mismatches in this order: data freshness/access, filter context, grain
+  and joins, then the metric implementation. Fix only from supported definitions
+  and evidence through agent-studio; re-run affected coverage and result checks.
+  Never tune a formula merely until a screenshot matches.
+- If expected results are missing, request only that evidence. Candidate objects
+  can remain saved, but parity is blocked. With no dashboard, validate an agreed
+  reference query/result set; label this **reference validation**, not dashboard
+  replacement. Query-history popularity alone cannot establish the reference.
 
 ## 5b. Add Verified Queries for edge cases
 
 - Encode the baseline questions — and any tricky variants that tripped the agent —
-  as **Verified Queries (VQRs)**. VQRs steer Cortex Analyst toward the correct SQL
-  and lock in accuracy for the questions that matter most.
+  as **Verified Queries (VQRs)** only after their SQL/results pass validation.
+  VQRs guide Cortex Analyst; they do not guarantee every future answer is correct.
 - Delegate VQR generation/seeding to the **`agent-studio`** skill's
   `vqr_suggestions` workflow if you want it to mine query history for candidates.
 
-## 5c. Ship it
+## 5c. Accept the validated scope, then ship
 
-Surface the validated agent where the business already works:
+Report one outcome with the evidence and remaining exclusions:
+
+| Outcome | Action |
+|---|---|
+| Passed | All required baseline questions pass; confirm customer acceptance |
+| Partial | Customer explicitly accepted a reduced scope and every question in that subset passes; retain the original gaps and label the delivery as partial |
+| Blocked | Required results, definitions, permissions, or approvals are missing, or a required comparison fails; record the next action and stop before sharing/Step 6 |
+
+Only after acceptance describe the tested scope as validated. If formal
+certification is required, follow the customer's certification process and obtain
+authorization; this workflow does not apply a certification tag automatically.
+
+Surface the accepted agent for named recipient roles (never default to PUBLIC),
+after the non-admin access check from Step 4 passes:
 - **CoWork** — business users chat with the agent directly.
 - **Streamlit app, App Runtime app, or Dashboard (Private Preview)** — offered next in **Step 6**
   (`05-app/SKILL.md`); the customer picks one first.
@@ -46,10 +61,12 @@ dashboard. Resist widening scope before the first proof point lands.
 
 ## Exit criteria
 
-- Agent answers the baseline questions with numbers matching the dashboard.
+- Agent answers all questions in the accepted scope with matching results;
+  validation type (dashboard parity or reference) and any partial scope are explicit.
 - VQRs added for the baseline questions and known edge cases.
 - Agent surfaced in CoWork (or an app), with a named owner.
-- A clear "next dashboard" candidate identified for the second iteration.
+- A named owner accepts the tested scope and knows the remaining gaps. Identify
+  a next dashboard only after this proof point; it is not a delivery blocker.
 - Then proceed to **Step 6** (`05-app/SKILL.md`), which asks the customer what to
   build (or to skip) before building anything.
 
