@@ -73,4 +73,5 @@ needed, agent-studio's deploy approvals, acceptance, and the Step 6 choice.
 
 If a definition, source, baseline, or approval is missing, save progress and
 report the exact blocker. Never report success you don't have. An approved
-subset is a partial delivery, not a dashboard replacement.
+subset is a partial delivery, not a dashboard replacement. Either way, give the
+open-definitions list (`04-validate/SKILL.md` 5e).
