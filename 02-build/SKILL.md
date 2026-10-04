@@ -34,6 +34,7 @@ expression, dependencies, and status:
 |---|---|
 | Converted/implemented with resolved sources | Review grain, joins, filters, and dependencies; queue result validation for Step 5 |
 | Definition found, translation unsupported | Preserve the exact DAX/Tableau formula and evaluation context. Explain the limitation and ask approval for a separate SQL implementation through agent-studio, or explicit exclusion |
+| Source unavailable (its table was dropped as non-Snowflake) | Not a translation problem; export may still label it "missing table or column" or "metric table could not be determined". Keep the formula and follow the source pause above |
 | Definition or dependency missing | Request the specific formula/context/source, accept an explicitly reduced scope, or pause; never infer a formula from a name |
 
 Inspect errors/warnings and missing columns, filters, or relationships as well as
