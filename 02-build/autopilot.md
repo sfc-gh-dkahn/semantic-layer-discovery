@@ -1,57 +1,53 @@
-# Step 3 — Autopilot path (no usable model or agreed fallback)
+# Step 3 — Autopilot path (build from metadata)
 
-Build from Snowflake metadata with **Autopilot** when no usable owning artifact
-is available or the user agrees to this fallback. Preserve any recovered model
-definitions; screenshots identify scope/results, not the underlying formulas.
+Use this when there is no usable model file, when required tables aren't
+connected to Snowflake in the file, or when the user agrees to this fallback.
+Keep any definitions recovered from the file; screenshots show scope and
+results, not formulas.
 
 ---
 
 ## Inputs
 
-- The **baseline record** from intake, including screenshots/results, selected
-  questions, context, recovered definitions, and explicitly missing evidence.
-- The **source tables**: search with the KPI and field names from the
-  screenshots (`snowflake_object_search`, `snowflake_semantic_view_search`,
-  busiest tables in query history). An existing semantic view on them: offer
-  to reuse it.
-- **Relevant reference queries**, including BI service-user history when available.
-  Confirm their relationship to the baseline and definition; frequency alone
-  does not make a query authoritative. See the shared Required coverage gate.
+- **The baseline record:** screenshots/results, questions, context, recovered
+  definitions, and what's missing.
+- **Source tables:** the ones confirmed in intake, or search with the KPI and
+  field names (`snowflake_object_search`, `snowflake_semantic_view_search`, the
+  busiest tables in query history). If a Semantic View already covers them,
+  offer to reuse it.
+- **Reference queries,** including the BI service user's history. Confirm each
+  one matches the baseline and its definition; how often a query runs doesn't
+  make it right.
 
-Reuse confirmed tables and deployment destination from intake. Consolidate only
-new mapping/definition gaps for confirmation; do not repeat the intake questions.
+Reuse the confirmed tables and destination. Ask only about new gaps, in one batch.
 
-## How to run it
+## Run it
 
-Delegate to the **`agent-studio`** skill. "Autopilot" is the Snowsight name;
-in agent-studio it is the **`creation`** workflow (`sv-generate`):
-1. Pass the source tables **and** relevant, corroborated SQL (as `sqlSource`, each
-   with its question), along with the baseline context and retained definitions.
-   Metadata alone does not establish business logic. Then use agent-studio's
-   `suggest_relationships`, `filters_and_metrics_suggestions`, and
-   `generate_description` as needed, retaining their required approvals.
-2. Before deployment/agent creation, apply `02-build/SKILL.md`'s **Required coverage
-   gate**. Generated suggestions are candidates, not validated definitions. Then:
-   - Confirm relationships and fact grain against the queries' joins.
-   - Take care with non-additive metrics (ratios, distinct counts, averages).
+1. **Delegate to `agent-studio`'s `creation` workflow** (`sv-generate`;
+   "Autopilot" is the Snowsight name). Pass the tables, corroborated SQL as
+   `sqlSource` (each with its question), the baseline context, and kept
+   definitions. Metadata alone doesn't give you business logic.
+2. **Use its helpers as needed:** `suggest_relationships`,
+   `filters_and_metrics_suggestions`, `generate_description`. Keep their approvals.
+3. **Run the coverage gate** (`02-build/SKILL.md` 3c) before deploying. Treat
+   suggestions as drafts:
+   - Check relationships and fact grain against the reference queries' joins.
+   - Take care with ratios, distinct counts, and averages.
    - Add named filters for the filters shown on screen.
-   - Add descriptions + synonyms using the dashboard's labels.
-3. Deploy with `upload` after authorization and confirm the object exists. Draft
-   reference-query VQR candidates; Step 5 validates them before accepting them.
+   - Write descriptions and synonyms from the dashboard's labels.
+4. **Deploy** with `upload` after authorization and confirm the object exists.
+5. **Draft Verified Query candidates** from the reference queries. Step 5
+   validates them.
 
-## Why questions-first matters
+Build for the dashboard's few real questions, not every column. Expand after
+Step 5 proves the baseline.
 
-Building for the dashboard's few real questions, not every column, keeps the
-view scoped and gives Step 5 a clear accuracy target. Expand only after Step 5
-proves the baseline.
+## Done when
 
-## Exit criteria
-
-- Semantic View created, or existing view verified for reuse against this baseline.
-- Required coverage passes for the approved scope, with explicit exclusions.
-- Initial VQR candidates drafted from relevant reference queries.
-- Descriptions/synonyms added; result validation is still pending. With no
-  dashboard results, Step 5 can validate agreed reference questions but cannot
+- The Semantic View exists, or reuse is verified against this baseline.
+- The gate passes for the approved scope; exclusions are recorded.
+- Verified Query candidates and descriptions are drafted.
+- With no dashboard results, Step 5 can do reference validation only, not
   claim dashboard parity.
 
-Return to `02-build/SKILL.md` "After the branch", then continue to `03-agent/SKILL.md`.
+Return to `02-build/SKILL.md` 3d.

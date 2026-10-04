@@ -1,68 +1,66 @@
-# Step 3 — Import path (usable BI definitions)
+# Step 3 — Import path
 
-Import usable model definitions rather than rebuilding them. Supported measures,
-relationships, and metadata provide a head start, not a guarantee of parity.
+Import the BI file's definitions instead of rebuilding them. Converted measures
+and relationships are a head start, not proof of parity.
 
 ---
 
-## Inputs (all from Steps 1-2)
+## Inputs (from Steps 1-2)
 
-Reuse the baseline record, stage paths (including any Tableau sidecar), analyze
-results, confirmed scope, deployment FQN, and separately confirmed source remap.
-Pass existing answers and approvals into the delegated workflow.
+The baseline record, stage paths (including any Tableau sidecar), analyze
+results, confirmed scope, deployment FQN, and any confirmed source remap. Pass
+existing answers and approvals into agent-studio.
 
-## How to run it
+## Run it
 
-Delegate the conversion to the **`agent-studio`** skill:
-- Power BI → its **`import_powerbi`** workflow (`pbi_export`).
-- Tableau → its **`import_tableau`** workflow (`tableau_export`).
+1. **Delegate to `agent-studio`:** Power BI → `import_powerbi` (`pbi_export`);
+   Tableau → `import_tableau` (`tableau_export`). Re-read the installed tool
+   reference first. Its required analysis and approval steps still run.
+2. **Set the export inputs:**
 
-Re-read the installed tool reference before exporting. Reuse intake evidence
-where the workflow allows it, but retain mandatory analysis/approval gates.
-
-| Export inputs | How to populate |
+| Export inputs | How to set them |
 |---|---|
-| Both tools | Staged `file_path`, required `semantic_model_name`; approved scope filters using exact analyzed names |
-| Tableau | `include_worksheets` for selected worksheets, `extract_usage_context: true`; confirm custom SQL handling if `has_custom_sql`. Published source: `additional_files` and, when needed, `published_datasource_stub_name` (intake 2b). `usage_context` may still include worksheets outside `include_worksheets`; use only the selected sheets' entries as baseline evidence |
-| Source-only Tableau | No worksheet filter. Deliberately use `include_all_columns: true` if needed to retain source definitions; then review against baseline scope and preserve join keys |
-| Power BI | `include_tables` and, when narrowing measures, `include_measures`; keep dependent tables/measures. There is no published-source sidecar or page filter parameter |
-| Descriptions | If `generate_descriptions: true`, supply an available `model_name` for Tableau; Power BI has a documented default. Enrichment is not a substitute for coverage |
+| Both tools | Staged `file_path`, required `semantic_model_name`; scope filters using exact analyzed names |
+| Tableau | `include_worksheets` for selected worksheets, `extract_usage_context: true`; confirm custom SQL handling if `has_custom_sql`. Published source: `additional_files` and, when needed, `published_datasource_stub_name` (intake 2b). `usage_context` may include unselected worksheets; use only the selected ones as evidence |
+| Source-only Tableau | No worksheet filter. Use `include_all_columns: true` if needed to keep source definitions; then trim to baseline scope and keep join keys |
+| Power BI | `include_tables` and, when narrowing measures, `include_measures`; keep dependent tables and measures. There is no sidecar or page-filter parameter |
+| Descriptions | With `generate_descriptions: true`, give Tableau a `model_name`; Power BI has a default. Descriptions don't add coverage |
 
-**Destination is not remapping.** Omit `target_database` / `target_schema` by
-default: they overwrite **every base-table reference**, not the semantic view's
-deployment location. Only set them for a confirmed uniform source relocation.
-For mixed schemas, preserve the FQNs or use agent-studio's edit workflow for
-confirmed per-table mappings. A remap cannot recover an M source dropped at parse time.
+3. **Leave `target_database` / `target_schema` unset.** They rewrite every
+   base-table reference, not where the view deploys. Set them only for a
+   confirmed move of all sources to one schema. For mixed schemas, keep the FQNs
+   or map tables one by one with agent-studio's edit workflow. No remap brings
+   back a source dropped at parse time.
+4. **Read the result.** Parse the stringified `result`; check `success`,
+   `errors`, and `warnings` against the failure table in intake 2a. Export
+   returns `yaml_content`, not a Snowflake object.
+5. **Run the coverage gate** (`02-build/SKILL.md` 3c) on each named metric and
+   its dependencies.
+   - Power BI: also check `unsupported_measure_count`, `m_query_warnings`, and
+     `validation_warnings`. Zero unsupported measures doesn't prove coverage.
+   - Tableau may skip LOD and table calculations even when their definitions exist.
+   - Add `usage_context` evidence to the baseline record, but don't change the
+     confirmed scope without asking.
+6. **Save and check references** in agent-studio's order: Tableau checks them
+   before `sv-write`, Power BI after saving. Pass the deployment FQN as
+   `--source-object`.
+   - Confirm the source objects and required columns exist, including approved
+     remaps. Empty or skipped validation proves nothing.
+   - Ask before rebuilding unsupported logic or running custom-view DDL. Re-run
+     the gate after fixes.
+7. **Deploy** with `upload` / `sv-deploy` once the user authorizes it (reuse an
+   earlier authorization). Confirm the object exists.
 
-## Export, reconcile, then deploy
+Keep YAML edits inside agent-studio. A blocked metric or a declined approval
+pauses that work; never move on to the agent quietly.
 
-1. Parse the stringified `result`; inspect `success`, `errors`, and `warnings`.
-   Export returns `yaml_content`, not a Snowflake object.
-2. Apply `02-build/SKILL.md`'s **Required coverage gate** to named baseline metrics
-   and dependencies. For Power BI, check export's `unsupported_measure_count`,
-   `m_query_warnings`, and `validation_warnings`; zero unsupported measures alone
-   does not prove coverage. Tableau may skip LOD/table calculations even when their
-   source definitions exist. Update the baseline from `usage_context` only where
-   it adds evidence, without silently changing the confirmed scope.
-3. Follow the delegated save/reference-check sequence: Tableau verifies references
-   before `sv-write`; Power BI verifies them after saving. For that save, use the
-   **deployment FQN** for `--source-object`, not as an export remap. Verify source objects
-   and required columns, including any approved remaps. Empty/skipped validation
-   is not proof of correctness. Ask before recreating unsupported logic or running
-   custom-view DDL. Reconcile coverage again after fixes.
-4. Follow `upload` / `sv-deploy` after explicit deployment
-   authorization, reusing it if already given. Verify the actual object exists.
+If the same entity has different names or IDs across sources, flag it and scope
+the fix separately; importing metadata doesn't reconcile them.
 
-Keep YAML operations inside agent-studio. A blocked metric or declined approval
-pauses the affected work; do not silently proceed to agent creation.
+## Done when
 
-If identity inconsistencies affect the baseline, flag them and scope remediation
-separately; metadata import does not reconcile entities.
+- The Semantic View exists, the gate passes for the approved scope, and
+  exclusions are recorded.
+- Descriptions and synonyms are added. Result validation waits for Step 5.
 
-## Exit criteria
-
-- Semantic View created from the import.
-- Required coverage passes for the approved scope; exclusions remain explicit.
-- View descriptions/synonyms added; result validation is still pending.
-
-Return to `02-build/SKILL.md` "After the branch", then continue to `03-agent/SKILL.md`.
+Return to `02-build/SKILL.md` 3d.
