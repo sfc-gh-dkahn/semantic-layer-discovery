@@ -22,8 +22,8 @@ Snowflake, and who want more from their dashboards:
 You don't need to own the dashboard or know its history; the skill reads what
 it needs from the file.
 
-It triggers on phrases like *semantic layer discovery, build a semantic view with
-a customer, replace a dashboard with an agent, agentic BI path.*
+It triggers on phrases like *semantic layer discovery, replace a dashboard with
+an agent, agentic BI path.*
 
 ## The steps
 
