@@ -9,8 +9,18 @@ does the import, the build, and the agent.
 
 ## Who it's for
 
-Sales engineers, solution architects, and data teams standing up a first
-agentic BI use case, or anyone turning a trusted dashboard into a governed agent.
+Teams on a legacy BI tool (Tableau or Power BI) whose data already lives in
+Snowflake, and who want more from their dashboards:
+
+- **An agent beside the dashboard.** Business users ask questions in plain
+  language and get answers grounded in the same metrics the dashboard shows.
+- **Logic out of the BI file.** The calculations move into a Snowflake Semantic
+  View, so every tool and agent uses one definition.
+- **Optionally, the dashboard on Snowflake.** Rebuild it as a Streamlit app, an
+  App Runtime app, or a CoWork Dashboard, with no separate BI tool needed to view it.
+
+You don't need to own the dashboard or know its history; the skill reads what
+it needs from the file.
 
 It triggers on phrases like *semantic layer discovery, build a semantic view with
 a customer, replace a dashboard with an agent, agentic BI path.*

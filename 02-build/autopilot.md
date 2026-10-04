@@ -10,7 +10,7 @@ results, not formulas.
 ## Inputs
 
 - **The baseline record:** screenshots/results, questions, context, recovered
-  definitions, and what's missing.
+  definitions (the `CALC`/`MEASURE` formulas from intake 1b-2), and what's missing.
 - **Source tables:** the ones confirmed in intake, or search with the KPI and
   field names (`snowflake_object_search`, `snowflake_semantic_view_search`, the
   busiest tables in query history). If a Semantic View already covers them,
