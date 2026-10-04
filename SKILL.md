@@ -1,86 +1,76 @@
 ---
 name: semantic-layer-discovery
-description: "Guide a customer end-to-end through evaluating and standing up a governed, agentic BI experience on Snowflake, following the 'Quick to Evaluate, Even Quicker to Production' path. Use when a user wants to: run semantic-layer discovery, walk a customer through building a semantic layer/semantic view, replace or modernize an existing dashboard/report with a Cortex Agent, or decide whether to import Power BI/Tableau vs. build from scratch. Runs discovery questions, then branches at the Create-Semantic-View step: if the customer HAS Power BI or Tableau it routes to import; if they have NEITHER it routes to Autopilot/build-from-scratch. Delegates the actual semantic-view import/build mechanics to the 'agent-studio' skill."
+description: "Guide a customer from one dashboard whose data is in Snowflake to a validated Semantic View and Cortex Agent with minimal repeated discovery. Use for semantic-layer discovery, building a semantic view with a customer, replacing a dashboard with an agent, or choosing Power BI/Tableau import vs. Autopilot. Requests model-owning artifacts and baseline evidence, routes on content readiness, reconciles required coverage, and validates before sharing. Delegates implementation to agent-studio and optionally builds the customer's chosen front end over the validated scope."
 ---
 
 # Semantic Layer Discovery
 
 ## When to Use
 
-Load this skill when you are helping a customer go from "we have dashboards" to a
-**governed, agentic BI experience** — a certified Semantic View wired to a Cortex
-Agent. It front-loads discovery, then routes to the correct build path depending
-on whether the customer already has Power BI or Tableau.
+Use this skill to take a customer from "we have dashboards" to a validated
+Semantic View wired to a Cortex Agent. The dashboard's data must be in
+Snowflake; the BI file need not connect to it directly.
 
 Triggers: *semantic layer discovery, semantic model discovery, enable a semantic
 layer, walk me through semantic setup, sit with a customer on semantics, replace a
 dashboard with an agent, agentic BI path, build a semantic view with a customer.*
 
-## What this skill is
+## What this skill does
 
-An **orchestrator**, not a re-implementation. It sequences the customer through
-the five-step "Path Forward" and, for the mechanical work of creating the semantic
-view (importing Power BI/Tableau or building from metadata), it hands off to the
-existing **`agent-studio`** skill.
+It sets the order and the inputs. The **`agent-studio`** skill does the work:
+its `import_tableau`, `import_powerbi`, and `creation` workflows build the
+Semantic View, and it creates the agent.
 
-## The Path Forward — five steps (plus an optional pre-step)
+## The six steps (plus an optional Step 0)
 
-```
-Step 0 (optional, Cortex Sense — Public Preview Nov 2026)
-  Run Cortex Sense first to surface naming conflicts, metric gaps, and coverage
-  issues from Snowflake metadata, query history, dbt, Tableau, and Power BI —
-  BEFORE building Semantic Views.
+| Step | What happens | File |
+|---|---|---|
+| 0 (optional) | Run **Cortex Sense** (PuPr Nov 2026) to surface naming conflicts, metric gaps, and coverage issues | `01-intake/SKILL.md` |
+| 1 | Get the dashboard's files and a baseline; check where the data lives; stage | `01-intake/SKILL.md` |
+| 2 | Analyze, fix missing pieces, confirm scope and destination | `01-intake/SKILL.md` |
+| 3 | Build the Semantic View (import or Autopilot), then check coverage | `02-build/SKILL.md` |
+| 4 | Create a test agent on it | `03-agent/SKILL.md` |
+| 5 | Validate against the baseline, add Verified Queries, accept, share | `04-validate/SKILL.md` |
+| 6 | Ask what to build (Streamlit, App Runtime, Dashboard, or not now), then build it | `05-app/SKILL.md` |
 
-Step 1  Choose ONE existing dashboard, report, or KPI set   -> discovery/SKILL.md
-Step 2  Map data objects, questions, business definitions   -> discovery/SKILL.md
-Step 3  Create the Semantic View                            -> build/SKILL.md
-          ├─ HAS Power BI / Tableau  -> build/import.md
-          └─ has NEITHER             -> build/autopilot.md
-Step 4  Create a Cortex Agent on the certified view         -> agent/SKILL.md
-Step 5  Validate against the baseline, add VQRs, ship        -> validate/SKILL.md
-```
+Read each file when you reach its step. Edge cases and the reasons behind the
+rules are in `reference/rules.md`; read it when a step points there.
 
-## The routing rule (the one decision point)
+## How to work
 
-At **Step 3**, ask the customer directly (use the ask_user_question tool):
+1. **Read before you ask.** Inspect any supplied files first. Ask only for what
+   changes the next step.
+2. **Ask in batches.** One request for files, one pre-filled confirmation of
+   scope and destination. Group any later gaps into one question.
+3. **Carry answers forward.** Pass the baseline record, analyze results, and
+   approvals into agent-studio. Its own required checks and approvals still
+   run; never claim a parameter skips them. Never re-ask a settled question.
+4. **Never guess.** Keep exact BI formulas and their context. Ask before
+   building logic the importer could not convert. Missing SQL is not a missing
+   definition.
+5. **Save progress in the working project**, not the skill folder: the baseline
+   record and coverage table. When new evidence arrives, resume at the blocked step.
+6. **Route on content, not file type.** A supported extension doesn't prove the
+   model is there or that its calculations will convert. Use the router in
+   `02-build/SKILL.md`. Recover a missing piece without restarting intake; keep
+   finished work.
+7. **One baseline first.** Finish and validate it before taking on more.
 
-> Do you already have Power BI or Tableau in your environment?
+A typical run asks the user 5–7 times: files, scope, a published-source file if
+needed, agent-studio's deploy approvals, acceptance, and the Step 6 choice.
 
-- **Has Power BI** (`.pbit` / `.pbix`) -> `build/import.md` (Power BI path)
-- **Has Tableau** (`.twb` / `.twbx` / `.tds` / `.tdsx`) -> `build/import.md` (Tableau path)
-- **Has both** -> ask which dashboard from Step 1 to prioritize; import that one first
-- **Has neither** -> `build/autopilot.md` (build from metadata / Autopilot)
+## Done means
 
-Importing carries **DAX measures, relationships, and calculations directly in**,
-so if the customer has a BI tool, prefer import — it reflects already-validated
-business definitions and is faster than starting cold.
+1. A Semantic View exists (imported, built, or approved for reuse), confirmed
+   with `SHOW SEMANTIC VIEWS` / `DESCRIBE SEMANTIC VIEW`.
+2. A Cortex Agent exists and uses that view.
+3. The agent passed validation against the agreed baseline, has Verified
+   Queries, and is shared with named roles. The record says whether this is
+   dashboard parity or reference validation, and lists any exclusions.
+4. The customer chose a Step 6 option and it exists, shows the baseline KPIs
+   from the Semantic View (plus agent chat for the apps), and has access
+   granted; or the record shows they declined.
 
-## How to run this skill
-
-### Interaction rule (REQUIRED) — one question at a time
-
-This is a **live, guided customer conversation**, not a form. You MUST:
-- Ask **exactly one question at a time** using the ask_user_question tool, and
-  **wait for the customer's answer** before asking the next.
-- **Never** batch or dump multiple questions in a single message, and never
-  pre-fill or assume the customer's answers.
-- Briefly acknowledge/reflect each answer before the next question, so the
-  customer feels heard and can correct you.
-- Only advance to the next step once the current step's questions are answered.
-- If an answer is vague, ask a short follow-up (still one at a time) rather than
-  guessing.
-
-Treat the question lists in each sub-skill as an ordered script to ask
-sequentially — not as a checklist to present all at once.
-
-1. Read `discovery/SKILL.md` and run Steps 1-2 with the customer, one question at a time.
-2. At Step 3, apply the routing rule above and read `build/SKILL.md`.
-3. Continue through `agent/SKILL.md` (Step 4) and `validate/SKILL.md` (Step 5).
-4. For the actual semantic-view import or build, delegate to the `agent-studio`
-   skill (its `import_tableau`, `import_powerbi`, and `creation` workflows).
-
-## Guiding principle
-
-**One dashboard replaced is the fastest proof point for broader adoption.** Keep
-the customer anchored on a single, trusted baseline all the way through Step 5 —
-resist scope creep until the first agent is validated and shipped.
+If a definition, source, baseline, or approval is missing, save progress and
+report the exact blocker. Never report success you don't have. An approved
+subset is a partial delivery, not a dashboard replacement.

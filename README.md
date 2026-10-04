@@ -1,118 +1,97 @@
-# Semantic Layer Discovery — Skill Guide
+# Semantic Layer Discovery
 
-A Cortex Code skill that walks a customer, one question at a time, from "we have
-dashboards" to a **governed, agentic BI experience**: a certified Semantic View
-wired to a Cortex Agent. It follows the "Quick to Evaluate, Even Quicker to
-Production" path and branches based on whether the customer already has Power BI
-or Tableau.
+A Cortex Code skill that turns one trusted dashboard into a validated Semantic
+View and Cortex Agent, asking as few questions as it can. The dashboard's data
+must be in Snowflake; the Tableau or Power BI file need not connect to it.
 
----
-
-## What it does
-
-- Runs **discovery** against a single, trusted baseline dashboard.
-- **Branches at Step 3**: if the customer has Power BI/Tableau it **imports** the
-  workbook; if not, it builds from scratch with **Autopilot**.
-- Wires a **Cortex Agent** to the certified view and **validates** it against the
-  original dashboard, then ships it.
-- Delegates the heavy lifting (import/build) to the installed **`agent-studio`**
-  skill — this skill orchestrates *when* and *what*, not the mechanics.
+The skill sets the order and the checks. The installed **`agent-studio`** skill
+does the import, the build, and the agent.
 
 ## Who it's for
 
-Sales engineers, solution architects, and data teams sitting with a customer to
-stand up their first agentic BI use case — or anyone modernizing a trusted
-dashboard into a conversational, governed agent.
+Teams on a legacy BI tool (Tableau or Power BI) whose data already lives in
+Snowflake, and who want more from their dashboards:
 
-## When it triggers
+- **An agent beside the dashboard.** Business users ask questions in plain
+  language and get answers grounded in the same metrics the dashboard shows.
+- **Logic out of the BI file.** The calculations move into a Snowflake Semantic
+  View, so every tool and agent uses one definition.
+- **Optionally, the dashboard on Snowflake.** Rebuild it as a Streamlit app, an
+  App Runtime app, or a CoWork Dashboard, with no separate BI tool needed to view it.
 
-Phrases like: *semantic layer discovery, walk me through building a semantic
-view with a customer, replace a dashboard with an agent, agentic BI path,
-enable a semantic layer.*
+You don't need to own the dashboard or know its history; the skill reads what
+it needs from the file.
 
----
+It triggers on phrases like *semantic layer discovery, replace a dashboard with
+an agent, agentic BI path.*
 
-## The five-step path
+## The steps
 
 | Step | What happens | File |
 |---|---|---|
-| 0 (optional) | Run **Cortex Sense** (PuPr Nov 2026) to surface naming conflicts, metric gaps, coverage | `discovery/SKILL.md` |
-| 1 | Choose **ONE** existing dashboard/report/KPI set as the baseline; **ask for a screenshot** of it | `discovery/SKILL.md` |
-| 2 | Map data objects, questions, and business definitions | `discovery/SKILL.md` |
-| 3 | **Create the Semantic View** — the branch point | `build/SKILL.md` |
-| 3a | Has Power BI/Tableau → **import** the workbook | `build/import.md` |
-| 3b | Has neither → **Autopilot** from metadata | `build/autopilot.md` |
-| 4 | Wire a **Cortex Agent** on the certified view | `agent/SKILL.md` |
-| 5 | **Validate** vs baseline, add Verified Queries, ship | `validate/SKILL.md` |
+| 0 (optional) | Run **Cortex Sense** (PuPr Nov 2026) to surface naming conflicts, metric gaps, and coverage issues | `01-intake/SKILL.md` |
+| 1 | Upload one dashboard's Tableau or Power BI file, plus a screenshot; the skill checks where its data lives | `01-intake/SKILL.md` |
+| 2 | Read the file's metrics and formulas; confirm scope and where the Semantic View goes | `01-intake/SKILL.md` |
+| 3 | Create the Semantic View, then check every required metric made it | `02-build/SKILL.md` |
+| 3a | Data connected to Snowflake: convert the file's definitions | `02-build/import.md` |
+| 3b | Not connected, or no file: build from Snowflake metadata | `02-build/autopilot.md` |
+| 4 | Create a **Cortex Agent** on the view | `03-agent/SKILL.md` |
+| 5 | Check its answers against the dashboard, then share | `04-validate/SKILL.md` |
+| 6 | *(optional)* Rebuild the dashboard on Snowflake: **Streamlit app**, **App Runtime app**, or **CoWork Dashboard** (Private Preview) | `05-app/SKILL.md` |
 
-### The one decision point (Step 3)
+`reference/rules.md` explains the reasons behind the rules.
 
-> "Do you already have Power BI or Tableau?"
+Expect about 5–7 touches: the files, one scope confirmation, a published-source
+file if needed, agent-studio's deploy approvals, acceptance, and the Step 6 choice.
 
-- **Power BI** (`.pbit`/`.pbix`) or **Tableau** (`.twb`/`.twbx`/`.tds`/`.tdsx`) → import path
-- **Both** → import the tool that owns the baseline dashboard first
-- **Neither** → Autopilot / build-from-metadata path
+## What to bring
 
-Importing carries DAX measures, relationships, and calculations directly in, so
-prefer import when a BI tool exists.
+- **Tableau:** the dashboard's `.twb`/`.twbx`, plus the published data source's
+  `.tds`/`.tdsx` if it uses one.
+- **Power BI:** a `.pbit` exported from the file that owns the model, or a
+  `.pbix` that contains the model. A thin report needs its model owner's file.
+- **Both:** a screenshot or results export of the page, with filters and date
+  range visible.
+- Packaged files with data rows aren't required; a `.twb` or `.pbit` is enough.
 
----
-
-## How to run it (facilitator notes)
-
-1. Ask **one question at a time** and wait for the answer — this is a live
-   conversation, not a form. Reflect each answer before moving on.
-2. In Step 1, **request a screenshot** of the baseline dashboard — you're
-   multimodal, so reading the real metrics/filters/layout accelerates the Step 2
-   mapping (helpful, not required).
-3. Keep the customer anchored on **one** baseline dashboard through Step 5.
-   Resist scope creep until the first agent is validated and shipped.
-4. At Step 3, apply the routing question and hand off to the `agent-studio`
-   skill for the actual import (`import_powerbi` / `import_tableau`) or build
-   (`creation` / Autopilot).
-5. **Identity/reference-data is a separate track.** Importing a dashboard gives
-   you the model; it does NOT reconcile the same entity appearing under different
-   names/IDs across systems. Flag identity gaps, but scope and quote that work
-   separately (see `build/import.md`).
+No model file? Screenshots from any BI tool still work; the skill builds from
+metadata.
 
 ## What "done" looks like
 
-- The agent answers the baseline dashboard's questions with **matching numbers**.
-- Verified Queries added for those questions and known edge cases.
-- Agent surfaced in **Snowflake Intelligence** (or an app via Cortex Code), with a
-  named owner.
-- A "next dashboard" candidate identified for iteration 2.
-
----
+- The agent answers the baseline's questions with **matching numbers**, or the
+  run is labeled partial, reference-only, or blocked with its next step.
+- Verified Queries cover those questions.
+- The agent is shared in **CoWork** with named roles and an owner.
+- If the customer chose one, a Streamlit app, App Runtime app, or Dashboard shows
+  the baseline KPIs.
 
 ## Install
 
-Unzip into your personal skills directory:
+**CoCo Snowsight**
+
+1. On your laptop, download this repo from GitHub (**Code » Download ZIP**) and
+   unzip it.
+2. Rename the folder to `semantic-layer-discovery` (drop the `-main` suffix).
+3. In Snowsight, open a **Workspace** and its Cortex Code chat.
+4. Click **+** » **Skills** » **Upload skill folder**, and pick the folder.
+5. Start it with `/semantic-layer-discovery`.
+
+**CoCo Desktop / CLI**
 
 ```
-~/.snowflake/cortex/skills/semantic-layer-discovery/
+git clone https://github.com/sfc-gh-dkahn/semantic-layer-discovery ~/.snowflake/cortex/skills/semantic-layer-discovery
 ```
 
-Restart Cortex Code so the skill is picked up. It loads automatically when your
-request matches the triggers above.
+Start it with `/semantic-layer-discovery`.
 
 ## Dependencies
 
-- The installed **`agent-studio`** skill (for import/build mechanics).
-- For Step 4, the **`agent-studio`** skill (agent creation).
-- No Python or scripts — this is a pure orchestration skill.
+- **`agent-studio`** for the Semantic View and the agent.
+- For Step 6, the skill for the chosen option and surface:
 
-## File map
-
-```
-semantic-layer-discovery/
-├── README.md            this guide
-├── SKILL.md             manifest + 5-step flow + routing rule
-├── discovery/SKILL.md   Steps 1-2
-├── build/
-│   ├── SKILL.md         Step 3 router
-│   ├── import.md        Power BI / Tableau import path (+ identity callout)
-│   └── autopilot.md     from-scratch / Autopilot path
-├── agent/SKILL.md       Step 4
-└── validate/SKILL.md    Step 5
-```
+  | Option | Desktop / CLI | Snowsight |
+  |---|---|---|
+  | Streamlit app | `developing-with-streamlit-in-snowflake` | `streamlit-in-workspaces` |
+  | App Runtime app | `snowflake-apps` + `sar-actions-desktop` | `snowflake-apps` + `sar-actions-workspaces` |
+  | Dashboard (Private Preview) | Check for a CoWork Dashboard skill; if none, build in Snowsight Cortex Code | `dashboard` |
