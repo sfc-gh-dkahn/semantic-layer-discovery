@@ -48,6 +48,19 @@ certification tag yourself.
 After acceptance and the Step 4 non-admin check, share the agent with named
 roles (never PUBLIC) in **CoWork**. Step 6 offers an app or dashboard.
 
+## 5e. Hand over the open definitions
+
+If any metric is open (excluded, blocked, or undefined), give the user this
+list for its owners, from the Gaps and 3c coverage table. Also give it when a
+run stops.
+
+| Metric | Page | Why open | Evidence | Ask | Owner |
+|---|---|---|---|---|---|
+| Dashboard name | Baseline page | Not in model, didn't convert, no source, or excluded | Exact formula or "none" | One standalone question | Name or "unknown" |
+
+It's a note to chase later, not a blocker: don't wait for answers. When they
+arrive, add those metrics from 3c.
+
 ## Done when
 
 - The agent answers every accepted question with matching results. The record
