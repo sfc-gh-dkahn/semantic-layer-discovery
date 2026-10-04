@@ -27,20 +27,16 @@ an agent, agentic BI path.*
 
 ## The steps
 
-```
-Step 1  Upload one dashboard's Tableau or Power BI file      -> 01-intake/SKILL.md
-          (plus a screenshot); the skill checks where its data lives
-Step 2  Read the file's metrics and formulas; confirm scope  -> 01-intake/SKILL.md
-          and where the Semantic View goes
-Step 3  Create the Semantic View                             -> 02-build/SKILL.md
-          ├─ data connected to Snowflake -> convert the file's definitions (import.md)
-          └─ not connected, or no file   -> build from Snowflake metadata (autopilot.md)
-          then check every required metric made it
-Step 4  Create a Cortex Agent on the view                    -> 03-agent/SKILL.md
-Step 5  Check its answers against the dashboard, then share  -> 04-validate/SKILL.md
-Step 6  (optional) Rebuild the dashboard on Snowflake:       -> 05-app/SKILL.md
-          Streamlit app, App Runtime app, or CoWork Dashboard (Private Preview)
-```
+| Step | What happens | File |
+|---|---|---|
+| 1 | Upload one dashboard's Tableau or Power BI file, plus a screenshot; the skill checks where its data lives | `01-intake/SKILL.md` |
+| 2 | Read the file's metrics and formulas; confirm scope and where the Semantic View goes | `01-intake/SKILL.md` |
+| 3 | Create the Semantic View, then check every required metric made it | `02-build/SKILL.md` |
+| 3a | Data connected to Snowflake: convert the file's definitions | `02-build/import.md` |
+| 3b | Not connected, or no file: build from Snowflake metadata | `02-build/autopilot.md` |
+| 4 | Create a **Cortex Agent** on the view | `03-agent/SKILL.md` |
+| 5 | Check its answers against the dashboard, then share | `04-validate/SKILL.md` |
+| 6 | *(optional)* Rebuild the dashboard on Snowflake: **Streamlit app**, **App Runtime app**, or **CoWork Dashboard** (Private Preview) | `05-app/SKILL.md` |
 
 `reference/rules.md` explains the reasons behind the rules.
 
