@@ -1,6 +1,6 @@
 ---
 name: semantic-layer-discovery
-description: "Guide a customer from one dashboard to a validated Semantic View and Cortex Agent with minimal repeated discovery. Use for semantic-layer discovery, building a semantic view with a customer, replacing a dashboard with an agent, or choosing Power BI/Tableau import vs. Autopilot. Requests model-owning artifacts and baseline evidence, routes on content readiness, reconciles required coverage, and validates before sharing. Delegates implementation to agent-studio and optionally builds the customer's chosen front end over the validated scope."
+description: "Guide a customer from one dashboard whose data is in Snowflake to a validated Semantic View and Cortex Agent with minimal repeated discovery. Use for semantic-layer discovery, building a semantic view with a customer, replacing a dashboard with an agent, or choosing Power BI/Tableau import vs. Autopilot. Requests model-owning artifacts and baseline evidence, routes on content readiness, reconciles required coverage, and validates before sharing. Delegates implementation to agent-studio and optionally builds the customer's chosen front end over the validated scope."
 ---
 
 # Semantic Layer Discovery
@@ -9,7 +9,8 @@ description: "Guide a customer from one dashboard to a validated Semantic View a
 
 Load this skill when you are helping a customer go from "we have dashboards" to a
 **governed, agentic BI experience** — a validated Semantic View wired to a Cortex
-Agent. It front-loads artifact checks, then routes on usable definitions and
+Agent. The dashboard's data must be in Snowflake; the BI file need not connect
+to it directly. It front-loads artifact checks, then routes on usable definitions and
 source mappings rather than the BI product or file extension alone.
 
 Triggers: *semantic layer discovery, semantic model discovery, enable a semantic
