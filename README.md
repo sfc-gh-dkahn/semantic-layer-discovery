@@ -67,7 +67,7 @@ metadata.
 
 ## Install
 
-**Snowsight**
+**CoCo Snowsight**
 
 1. On your laptop, download this repo from GitHub (**Code » Download ZIP**) and
    unzip it.
@@ -76,14 +76,13 @@ metadata.
 4. Click **+** » **Skills** » **Upload skill folder**, and pick the folder.
 5. Start it with `/semantic-layer-discovery`.
 
-**Desktop / CLI**
+**CoCo Desktop / CLI**
 
 ```
 git clone https://github.com/sfc-gh-dkahn/semantic-layer-discovery ~/.snowflake/cortex/skills/semantic-layer-discovery
 ```
 
-Restart Cortex Code so it picks up the skill. It loads when your request matches
-the triggers above.
+Start it with `/semantic-layer-discovery`.
 
 ## Dependencies
 
