@@ -70,6 +70,64 @@ can still be useful; it just needs separate dashboard context.
 - File name has `[` or `]`: stage downloads fail. Rename it (Desktop) or ask the
   user to rename it (Snowsight).
 
+### 1b-2. Check sources and pages locally (no question)
+
+Before staging a BI file, read its sources and, for Power BI, its pages. This
+skill covers dashboards built on Snowflake. If no source is Snowflake, the file
+is out of scope; say so and stop.
+
+**Tableau.** `.twbx`/`.tdsx` are
+zip archives; `.twb`/`.tds` are plain XML. Both surfaces have a shell.
+
+```bash
+unzip -o -q '<file>.twbx' -d /tmp/sld_check   # skip for .twb/.tds
+grep -ho "<connection [^>]*class='[a-z-]*'" /tmp/sld_check/*.tw[bs] 2>/dev/null \
+  | grep -o "class='[a-z-]*'" | sort | uniq -c
+```
+
+Ignore `federated`; it wraps the real connections. `repository-location` alone
+is publish history, not a published source.
+
+| Finding | Meaning | Next |
+|---|---|---|
+| A `snowflake` connection | Importable | Stage (1c) |
+| A `sqlproxy` connection | Published-source stub | Stage (1c), then request the `.tds`/`.tdsx` (2b) |
+
+**Power BI.** `.pbix`/`.pbit` are zip archives. Power Query sources are in
+`DataMashup`: 8 header bytes, a 4-byte little-endian length, then a zip holding
+`Formulas/Section1.m`. Report pages are UTF-16 JSON in `Report/Layout`.
+
+```bash
+mkdir -p /tmp/sld_check && unzip -o -q '<file>.pbix' -d /tmp/sld_check
+python3 - <<'PY'
+import io, json, re, struct, zipfile
+b = open('/tmp/sld_check/DataMashup', 'rb').read()
+n = struct.unpack('<I', b[4:8])[0]
+m = zipfile.ZipFile(io.BytesIO(b[8:8 + n])).read('Formulas/Section1.m').decode()
+for line in m.splitlines():
+    if re.search(r'^shared |Source\s*=', line.strip()): print(line.strip()[:160])
+L = json.loads(open('/tmp/sld_check/Report/Layout', 'rb').read().decode('utf-16-le'))
+for sec in L['sections']:
+    refs = set()
+    for v in sec['visualContainers']:
+        pj = json.loads(v['config']).get('singleVisual', {}).get('projections', {})
+        refs |= {p['queryRef'] for vv in pj.values() for p in vv}
+    print('PAGE', sec['displayName'], sorted(refs))
+PY
+```
+
+| Finding | Meaning | Next |
+|---|---|---|
+| `Source =` uses `Snowflake.Databases` | Importable | Stage (1c) |
+| No `DataMashup` or no `Section1.m` | Thin report or live connection | 2b "thin report" |
+
+Keep the page list. Measures referenced on the baseline page become the
+required metrics in 2c; one missing from the model's measures (for example a
+hidden or KPI-only measure) is a gap to ask about, not something to infer.
+
+Read only the XML/JSON/M text. Do not open `.hyper` files, decompress
+`DataModel`, or run file-supplied code.
+
 ### 1c. Stage it (no question)
 
 agent-studio's tools only take stage paths, so stage first. The stage only
@@ -79,6 +137,7 @@ None set, or `CREATE STAGE` fails? Use any schema the role can create a stage
 in; ask only if there isn't one.
 
 ```sql
+-- Not TEMPORARY: it ends with the session, before the tools read it.
 CREATE STAGE IF NOT EXISTS <DB>.<SCHEMA>.SEMANTIC_IMPORT_STAGE
   DIRECTORY = (ENABLE = TRUE) ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE');
 -- Desktop / CLI
@@ -120,23 +179,28 @@ No `cortex` CLI? One JSON argument:
 `SELECT SYSTEM$CORTEX_ANALYST_SVA_TOOL($${"tool":"tableau_analyze","parameters":{"file_path":"@<DB>.<SCHEMA>.SEMANTIC_IMPORT_STAGE/<file>"}}$$);`
 (Undocumented. Check the result for an embedded error even when the SQL succeeds.)
 
-Parse the response's stringified `result` and check success. Retain worksheets
+Parse the response's stringified `result`. `success: true` alone is not a pass:
+treat analyze as failed if `datasources` is empty or `total_columns` is 0
+(Tableau) or `total_tables` is 0 (Power BI), and treat export as failed if
+`errors` is non-empty, `table_count` is 0, or `yaml_content` has no tables.
+Read `warnings` and `message` for the cause, then go to 2b. Otherwise retain worksheets
 (Tableau), resolved tables/measures (Power BI), `has_custom_sql`, and warnings.
 Power BI's analyze validation warnings are under `validation.validation_warnings`;
 `m_query_warnings` describe unresolved sources. `unsupported_measure_count` is
 an **export** result, not an analyze field. Final coverage is checked after export.
-Power BI's documented tools do not expose report-page/visual/slicer context;
+Power BI's documented tools do not expose report-page/visual/slicer context
+(use the 1b-2 page list);
 Tableau `usage_context` arrives at export. Mark unavailable context as missing.
 
 ### 2b. Fix only what's broken
 
 | Sign | Action |
 |---|---|
-| Published Tableau source reference with missing relations (`relation_count: 0` is a clue, not proof) | Request the owning `.tds`/`.tdsx`. Keep the workbook as the primary input; stage the sidecar for **export's** `additional_files`. Only the first sidecar is used; `published_datasource_stub_name` selects one stub, not a bulk merge. If the baseline needs several unresolved sources, explain the limit and agree a narrower scope or another build route. |
+| Published Tableau source reference (a `sqlproxy` connection in the XML) with missing relations. `relation_count: 0` without a stub is not this case. | Request the owning `.tds`/`.tdsx`. Keep the workbook as the primary input; stage the sidecar for **export's** `additional_files`. Only the first sidecar is used; `published_datasource_stub_name` selects one stub, not a bulk merge. If the baseline needs several unresolved sources, explain the limit and agree a narrower scope or another build route. |
 | Tableau source-only `.tds`/`.tdsx` | Keep usable definitions; collect the baseline page/results separately. Do not require a workbook solely to import source metadata. |
 | Power BI thin report / missing model | Request the model owner's PBIT or model-containing PBIX, not another export of the same thin report. |
 | Unsupported artifact (for example bare Hyper or PBIP) | Explain the missing container/definitions and request a supported owning artifact; renaming an extension is not conversion. |
-| Source pointer, unresolved M source, or external data | Check retained source metadata first, then discover and confirm compatible Snowflake objects. An extract does not automatically erase source definitions. Do not assume rows or matching column names establish lineage, or that a schema remap recovers a table dropped during parsing. |
+| Source pointer, unresolved M source, or external data | Check retained source metadata first, then discover and confirm compatible Snowflake objects. An extract of a Snowflake connection still carries its source definitions. Do not assume rows or matching column names establish lineage, or that a schema remap recovers a table dropped during parsing. |
 
 Record the missing dependency and why the replacement helps. Retry only when
 the artifact, mapping, or relevant parameters change. If the owner cannot provide

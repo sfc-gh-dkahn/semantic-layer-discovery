@@ -23,7 +23,7 @@ where the workflow allows it, but retain mandatory analysis/approval gates.
 | Export inputs | How to populate |
 |---|---|
 | Both tools | Staged `file_path`, required `semantic_model_name`; approved scope filters using exact analyzed names |
-| Tableau | `include_worksheets` for selected worksheets, `extract_usage_context: true`; confirm custom SQL handling if `has_custom_sql`. Published source: `additional_files` and, when needed, `published_datasource_stub_name` (intake 2b) |
+| Tableau | `include_worksheets` for selected worksheets, `extract_usage_context: true`; confirm custom SQL handling if `has_custom_sql`. Published source: `additional_files` and, when needed, `published_datasource_stub_name` (intake 2b). `usage_context` may still include worksheets outside `include_worksheets`; use only the selected sheets' entries as baseline evidence |
 | Source-only Tableau | No worksheet filter. Deliberately use `include_all_columns: true` if needed to retain source definitions; then review against baseline scope and preserve join keys |
 | Power BI | `include_tables` and, when narrowing measures, `include_measures`; keep dependent tables/measures. There is no published-source sidecar or page filter parameter |
 | Descriptions | If `generate_descriptions: true`, supply an available `model_name` for Tableau; Power BI has a documented default. Enrichment is not a substitute for coverage |
