@@ -1,63 +1,59 @@
-# Step 5 — Validate, iterate, and ship
+# Step 5 — Validate, accept, share
 
-Prove the agent against the **original baseline dashboard** from Step 1, harden it
-with Verified Queries, then surface it where users work.
+Prove the agent against the baseline from Step 1, lock in what works with
+Verified Queries, then share it.
 
 ---
 
 ## 5a. Validate against the baseline
 
-- Use the confirmed **baseline record**, not a fresh discovery round. Ask the
-  agent the agreed questions covering every required metric, including separately
-  implemented formulas. Do not assume the importer supplied all visual context.
-- Compare with the recorded expected results under the same filters, date range,
-  refresh cutoff, and access identity. Check relevant detail grain and totals,
-  plus important filter variants (especially ratios, LOD, and time calculations).
-  Agree any rounding/tolerance explicitly; one matching tile is not sufficient.
-- Diagnose mismatches in this order: data freshness/access, filter context, grain
-  and joins, then the metric implementation. Fix only from supported definitions
-  and evidence through agent-studio; re-run affected coverage and result checks.
-  Never tune a formula merely until a screenshot matches.
-- If expected results are missing, request only that evidence. Candidate objects
-  can remain saved, but parity is blocked. With no dashboard, validate an agreed
-  reference query/result set; label this **reference validation**, not dashboard
-  replacement. Query-history popularity alone cannot establish the reference.
+1. **Use the baseline record**; no new discovery. Ask questions that cover
+   every required metric, including ones implemented separately in SQL. Don't
+   assume the importer brought over page or visual context; use the record's.
+2. **Compare like with like:** the same filters, date range, refresh cutoff, and
+   access identity as the expected results. Check detail rows, totals, and key
+   filter variants (especially ratios, LOD, and time calculations). Agree on
+   rounding and tolerance up front. One matching tile is not enough.
+3. **Diagnose mismatches in order:** data freshness and access → filter context
+   → grain and joins → the metric itself. Fix only from supported definitions,
+   through agent-studio, then re-run the coverage gate and the affected result checks. Never tweak a formula
+   until it matches a screenshot.
+4. **Missing expected results?** Ask for only that. Objects stay saved; parity
+   waits.
+5. **No dashboard?** Validate an agreed reference query or result set and label
+   it **reference validation**, not dashboard replacement. A query being popular
+   doesn't make it the reference.
 
-## 5b. Add Verified Queries for edge cases
+## 5b. Add Verified Queries
 
-- Encode the baseline questions — and any tricky variants that tripped the agent —
-  as **Verified Queries (VQRs)** only after their SQL/results pass validation.
-  VQRs guide Cortex Analyst; they do not guarantee every future answer is correct.
-- Delegate VQR generation/seeding to the **`agent-studio`** skill's
-  `vqr_suggestions` workflow if you want it to mine query history for candidates.
+Add the baseline questions, and any variants that tripped the agent, as
+Verified Queries once their SQL and results pass. They guide Cortex Analyst;
+they don't guarantee future answers. To mine query history for more,
+use agent-studio's `vqr_suggestions` workflow.
 
-## 5c. Accept the validated scope, then ship
+## 5c. Report one outcome
 
-Report one outcome with the evidence and remaining exclusions:
+| Outcome | Meaning | Next |
+|---|---|---|
+| Passed | Every required baseline question passes | Get the customer's acceptance |
+| Partial | The customer accepted a smaller scope and every question in it passes | Keep the original gaps; label the delivery partial |
+| Blocked | Results, definitions, permissions, or approvals are missing, or a comparison fails | Record the next action; don't share or start Step 6 |
 
-| Outcome | Action |
-|---|---|
-| Passed | All required baseline questions pass; confirm customer acceptance |
-| Partial | Customer explicitly accepted a reduced scope and every question in that subset passes; retain the original gaps and label the delivery as partial |
-| Blocked | Required results, definitions, permissions, or approvals are missing, or a required comparison fails; record the next action and stop before sharing/Step 6 |
+Call the scope "validated" only after acceptance. If the customer needs formal
+certification, follow their process with their authorization; don't apply a
+certification tag yourself.
 
-Only after acceptance describe the tested scope as validated. If formal
-certification is required, follow the customer's certification process and obtain
-authorization; this workflow does not apply a certification tag automatically.
+## 5d. Share it
 
-Surface the accepted agent for named recipient roles (never default to PUBLIC),
-after the non-admin access check from Step 4 passes:
-- **CoWork** — business users chat with the agent directly.
-- **Streamlit app, App Runtime app, or Dashboard (Private Preview)** — offered next in **Step 6**
-  (`05-app/SKILL.md`); the customer picks one first.
+After acceptance and the Step 4 non-admin check, share the agent with named
+roles (never PUBLIC) in **CoWork**. Step 6 offers an app or dashboard.
 
-## Exit criteria
+## Done when
 
-- Agent answers all questions in the accepted scope with matching results;
-  validation type (dashboard parity or reference) and any partial scope are explicit.
-- VQRs added for the baseline questions and known edge cases.
-- Agent surfaced in CoWork (or an app), with a named owner.
-- A named owner accepts the tested scope and knows the remaining gaps. Identify
-  a next dashboard only after this proof point; it is not a delivery blocker.
-- Then proceed to **Step 6** (`05-app/SKILL.md`), which asks the customer what to
-  build (or to skip) before building anything.
+- The agent answers every accepted question with matching results. The record
+  states dashboard parity or reference validation, and any partial scope.
+- Verified Queries are added.
+- The agent is shared; a named owner accepts the tested scope and knows its
+  gaps. Pick the next dashboard only after this; it doesn't block delivery.
+
+Go to `05-app/SKILL.md`.

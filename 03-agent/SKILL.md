@@ -1,50 +1,35 @@
-# Step 4 — Create a Cortex Agent on the candidate Semantic View
+# Step 4 — Create a test agent
 
-Wire a test agent to the deployed, coverage-reviewed Semantic View from Step 3.
-Required metrics must be implemented for the approved scope; certification and
-broader sharing wait for Step 5 result validation.
+Wire a test agent to the Semantic View from Step 3. Sharing and certification
+wait for Step 5.
 
 ---
 
-## What to do
+## Do this
 
-1. **Point the agent at the candidate Semantic View.** Use its verified FQN and
-   the approved coverage scope as grounding; test whether answers respect it.
+1. **Create the agent through `agent-studio` (REQUIRED).** It must be a real
+   object grounded on the view's verified FQN, confirmed to exist before Step 5.
+2. **Write its instructions:**
+   - **Tone** for this audience.
+   - **Scope:** the baseline domain only, for now.
+   - **Business rules:** only defaults confirmed in the baseline record. Tableau
+     `usage_context` or screenshots can support them; Power BI exports carry no
+     page, slicer, or visual context. A visible filter or a repeated `WHERE`
+     clause is test context, not a default. No confirmed default → set none.
+   - **Exclusions:** name each metric outside the accepted scope and tell the
+     agent to say it can't answer rather than approximate. Test that it does.
+3. **Test that answers stay inside the approved scope.**
+4. **Check access as a real user.** Grants, row access policies, and masking
+   must work in the agent's execution context. BI tool security rules don't
+   migrate with the metadata: list any that need a Snowflake policy and add it.
+   Test with a non-admin user before sharing, and
+   never promise the BI tool's security carries over.
+5. **Optional:** for customer- or public-facing agents, add Cortex Guardrails.
 
-2. **Add natural-language instructions** for:
-   - **Tone** — how answers should read for this audience.
-   - **Scope** — what's in/out of bounds (keep it to the baseline domain first).
-   - **Business rules** — use confirmed definitions/defaults in the baseline
-     record. Tableau `usage_context` or supplied screenshots can support these;
-     do not assume Power BI exports contain page/slicer/visual context.
-     A visible selection or repeated query `WHERE` clause is test context, not
-     automatically a permanent default. If no default is confirmed, set none.
-   - **Known exclusions** — name metrics outside the accepted scope and instruct
-     the agent to say it cannot answer rather than approximate. Test this behavior.
+## Done when
 
-3. **Verify the execution identity and governance.** Snowflake grants, row access
-   policies, and masking must behave as intended in the agent's actual execution
-   context. BI-specific security rules are not automatically migrated by metadata
-   import. Identify any required gap and verify access with a non-admin test user
-   before sharing; do not promise governance equivalence based on import alone.
+- A real test agent uses the Semantic View.
+- Tone, scope, rules, and exclusions are in its instructions.
+- A non-admin test user sees the right data.
 
-## Optional: guardrails
-
-For customer- or public-facing assistants, consider attaching **Cortex Guardrails**
-so responses stay safe, neutral, and on-topic before they reach an end user.
-
-## Delegation (REQUIRED — actually create the agent)
-
-You **MUST** invoke the **`agent-studio`** skill to create a
-real Cortex Agent object grounded on the candidate Semantic View — not describe
-how one would be created. This skill sequences *when* to do it and *what* to wire
-in; the agent object must actually be created and confirmed to exist before Step
-5.
-
-## Exit criteria
-
-- A real test agent grounded on the deployed, coverage-reviewed Semantic View.
-- NL instructions for tone, scope, and business rules in place.
-- Confirmed that RBAC / RLS / masking behave correctly for a non-admin test user.
-
-Proceed to `04-validate/SKILL.md` (Step 5).
+Go to `04-validate/SKILL.md`.

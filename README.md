@@ -1,85 +1,67 @@
-# Semantic Layer Discovery — Skill Guide
+# Semantic Layer Discovery
 
-A Cortex Code skill that walks a customer, with as few questions as possible, from "we have
-dashboards" to a **governed, agentic BI experience**: a validated Semantic View
-wired to a Cortex Agent. It follows the "Quick to Evaluate, Even Quicker to
-Production" path and branches on whether the supplied artifacts contain usable
-model definitions and source mappings.
+A Cortex Code skill that turns one trusted dashboard into a validated Semantic
+View and Cortex Agent, asking as few questions as it can. The dashboard's data
+must be in Snowflake; the Tableau or Power BI file need not connect to it.
 
----
-
-## What it does
-
-- Requests the **owning artifacts** and a screenshot/results export for one
-  baseline dashboard/page, stages the model files, and analyzes them with agent-studio.
-- Resolves missing dependencies before choosing import or **Autopilot**, preserving
-  usable definitions and asking only for material gaps.
-- Reconciles required metric coverage, deploys the candidate view, creates a test
-  **Cortex Agent**, then validates results and accepts the scope before sharing.
-- **Builds a front end** over the validated view and agent — the customer picks a
-  Streamlit app, App Runtime app, or Dashboard in CoWork (PrPr).
-- Delegates the heavy lifting (import/build) to the installed **`agent-studio`**
-  skill — this skill orchestrates *when* and *what*, not the mechanics.
+The skill sets the order and the checks. The installed **`agent-studio`** skill
+does the import, the build, and the agent.
 
 ## Who it's for
 
-Sales engineers, solution architects, and data teams sitting with a customer to
-stand up their first agentic BI use case — or anyone modernizing a trusted
-dashboard into a conversational, governed agent.
+Teams on a legacy BI tool (Tableau or Power BI) whose data already lives in
+Snowflake, and who want more from their dashboards:
 
-## When it triggers
+- **An agent beside the dashboard.** Business users ask questions in plain
+  language and get answers grounded in the same metrics the dashboard shows.
+- **Logic out of the BI file.** The calculations move into a Snowflake Semantic
+  View, so every tool and agent uses one definition.
+- **Optionally, the dashboard on Snowflake.** Rebuild it as a Streamlit app, an
+  App Runtime app, or a CoWork Dashboard, with no separate BI tool needed to view it.
 
-Phrases like: *semantic layer discovery, walk me through building a semantic
-view with a customer, replace a dashboard with an agent, agentic BI path,
-enable a semantic layer.*
+You don't need to own the dashboard or know its history; the skill reads what
+it needs from the file.
 
----
+It triggers on phrases like *semantic layer discovery, build a semantic view with
+a customer, replace a dashboard with an agent, agentic BI path.*
 
-## The six-step path
+## The steps
 
 | Step | What happens | File |
 |---|---|---|
-| 0 (optional) | Run **Cortex Sense** (PuPr Nov 2026) to surface naming conflicts, metric gaps, coverage | `01-intake/SKILL.md` |
-| 1 | Choose **ONE** baseline; request owning artifacts and screenshot/results evidence | `01-intake/SKILL.md` |
-| 2 | Analyze, resolve dependencies, confirm scope and deployment destination | `01-intake/SKILL.md` |
-| 3 | **Create the Semantic View** and reconcile required coverage | `02-build/SKILL.md` |
-| 3a | Usable BI definitions → **import** selected scope | `02-build/import.md` |
-| 3b | No usable model / agreed fallback → **Autopilot**, retaining known definitions | `02-build/autopilot.md` |
-| 4 | Wire a test **Cortex Agent** on the candidate view | `03-agent/SKILL.md` |
-| 5 | **Validate** vs baseline, add Verified Queries, accept scope and ship | `04-validate/SKILL.md` |
-| 6 | **Ask** what to build — **Streamlit app**, **App Runtime app**, or **Dashboard** (Private Preview) — then build it | `05-app/SKILL.md` |
+| 1 | Get the dashboard's files and a baseline; check where the data lives; stage | `01-intake/SKILL.md` |
+| 2 | Analyze, fix missing pieces, confirm scope and destination | `01-intake/SKILL.md` |
+| 3 | Build the Semantic View: **import** the BI file, or **Autopilot** from metadata; check coverage | `02-build/SKILL.md` |
+| 4 | Create a test **Cortex Agent** | `03-agent/SKILL.md` |
+| 5 | **Validate** against the baseline, add Verified Queries, accept, share | `04-validate/SKILL.md` |
+| 6 | Ask what to build (**Streamlit app**, **App Runtime app**, **Dashboard** (Private Preview), or not now), then build it | `05-app/SKILL.md` |
 
-### Get the right inputs first
+`reference/rules.md` explains the reasons behind the rules.
 
-- **Tableau:** the chosen dashboard's `.twb`/`.twbx`; add the published source's
-  `.tds`/`.tdsx` if needed. A source-only file is useful with separate baseline evidence.
-- **Power BI:** prefer a `.pbit` exported from the model-owning Desktop file, or
-  a model-containing `.pbix`. A thin report needs its underlying model owner's artifact.
-- **Both:** a screenshot/results export with filters and date range. If already
-  supplied, inspect it before asking again. Packaged files with rows are not required
-  just to obtain formulas.
+Expect about 5–7 touches: the files, one scope confirmation, a published-source
+file if needed, agent-studio's deploy approvals, acceptance, and the Step 6 choice.
 
-Import usable definitions first. Missing dependencies trigger a targeted request;
-unsupported calculations trigger coverage review, not repeated file exports.
-Screenshots/no usable model use the metadata path with confirmed definition evidence.
+## What to bring
 
----
+- **Tableau:** the dashboard's `.twb`/`.twbx`, plus the published data source's
+  `.tds`/`.tdsx` if it uses one.
+- **Power BI:** a `.pbit` exported from the file that owns the model, or a
+  `.pbix` that contains the model. A thin report needs its model owner's file.
+- **Both:** a screenshot or results export of the page, with filters and date
+  range visible.
+- Packaged files with data rows aren't required; a `.twb` or `.pbit` is enough.
+
+No model file? Screenshots from any BI tool still work; the skill builds from
+metadata.
 
 ## What "done" looks like
 
-- The agent answers the baseline dashboard's questions with **matching numbers**.
-- If the customer accepts a subset or reference-query validation instead, label
-  that outcome explicitly; it is not full dashboard parity. Missing required
-  inputs or approvals produce a saved, blocked run, not a false success.
-- Verified Queries added for those questions and known edge cases.
-- Agent surfaced in **CoWork** (or an app via Cortex Code), with a
-  named owner.
-- Acceptance for the tested scope is recorded; formal certification, if required,
-  follows the customer's process only after validation.
-- If the customer opted in: a deployed **Streamlit app**, **App Runtime app**, or
-  **Dashboard** (Private Preview) showing the baseline KPIs, shared with the customer's role(s).
-
----
+- The agent answers the baseline's questions with **matching numbers**, or the
+  run is labeled partial, reference-only, or blocked with its next step.
+- Verified Queries cover those questions.
+- The agent is shared in **CoWork** with named roles and an owner.
+- If the customer chose one, a Streamlit app, App Runtime app, or Dashboard shows
+  the baseline KPIs.
 
 ## Install
 
@@ -98,12 +80,12 @@ Screenshots/no usable model use the metadata path with confirmed definition evid
 git clone https://github.com/sfc-gh-dkahn/semantic-layer-discovery ~/.snowflake/cortex/skills/semantic-layer-discovery
 ```
 
-Restart Cortex Code so the skill is picked up. It loads automatically when your
-request matches the triggers above.
+Restart Cortex Code so it picks up the skill. It loads when your request matches
+the triggers above.
 
 ## Dependencies
 
-- The installed **`agent-studio`** skill for semantic view import/build and agent creation.
+- **`agent-studio`** for the Semantic View and the agent.
 - For Step 6, the skill for the chosen option and surface:
 
   | Option | Desktop / CLI | Snowsight |
