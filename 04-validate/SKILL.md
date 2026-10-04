@@ -58,7 +58,8 @@ run stops.
 |---|---|---|---|---|---|
 | Dashboard name | Baseline page | Not in model, didn't convert, no source, or excluded | Exact formula or "none" | One standalone question | Name or "unknown" |
 
-When answers arrive, resume at 3c.
+It's a note to chase later, not a blocker: don't wait for answers. When they
+arrive, add those metrics from 3c.
 
 ## Done when
 
@@ -67,6 +68,5 @@ When answers arrive, resume at 3c.
 - Verified Queries are added.
 - The agent is shared; a named owner accepts the tested scope and knows its
   gaps. Pick the next dashboard only after this; it doesn't block delivery.
-- The user has the 5e list, or nothing is open.
 
 Go to `05-app/SKILL.md`.
