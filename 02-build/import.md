@@ -1,66 +1,39 @@
-# Step 3 — Import path
+# Step 2 — Import & Consolidation Path
 
-Import the BI file's definitions instead of rebuilding them. Converted measures
-and relationships are a head start, not proof of parity.
+Use this guide when building or consolidating a Subject Area Semantic View from Power BI files (`.pbit`, `.pbix`), Tableau files (`.twb`, `.twbx`, `.tds`, `.tdsx`), or Horizon Catalog connected BI metadata.
 
----
+## Consolidating an Existing Semantic View (`approved_action = consolidate`)
 
-## Inputs (from Steps 1-2)
+When Step 1 confirmed an existing Semantic View overlaps the incoming Subject Area:
 
-The baseline record, stage paths (including any Tableau sidecar), analyze
-results, confirmed scope, deployment FQN, and any confirmed source remap. Pass
-existing answers and approvals into agent-studio.
+1. Inspect the existing view (`DESCRIBE SEMANTIC VIEW <FQN>`) and load it through `agent-studio` rather than overwriting it blindly.
+2. Export the incoming anchor BI model via `agent-studio` (`pbi_export` / `tableau_export`) to identify only the delta: missing base tables, missing relationships, missing dimensions/measures, and synonyms from imported BI labels.
+3. Merge the approved delta into the existing Semantic View through `agent-studio`'s edit workflow:
+   - **Never break existing metric definitions** used by live dashboards or agents.
+   - Where incoming reports conflict with an existing metric (`B006` drift), apply the canonical definition approved at the Batch Approval Gate and log any retired alias.
+4. Run the coverage gate (`02-build/SKILL.md` 2c), save (`sv-write`), deploy (`upload` / `sv-deploy`), and confirm via `DESCRIBE SEMANTIC VIEW`.
 
-## Run it
+## Horizon Catalog Connected BI Import (Optional Estate Path)
 
-1. **Delegate to `agent-studio`:** Power BI → `import_powerbi` (`pbi_export`);
-   Tableau → `import_tableau` (`tableau_export`). Re-read the installed tool
-   reference first. Its required analysis and approval steps still run.
-2. **Set the export inputs:**
+When Power BI or Tableau metadata is already cataloged in Snowflake Horizon Catalog, delegate to `agent-studio` to import the cataloged semantic model directly rather than exporting files manually, then run the same coverage gate, deploy, and `DESCRIBE SEMANTIC VIEW` read-back check.
 
-| Export inputs | How to set them |
-|---|---|
-| Both tools | Staged `file_path`, required `semantic_model_name`; scope filters using exact analyzed names |
-| Tableau | `include_worksheets` for selected worksheets, `extract_usage_context: true`; confirm custom SQL handling if `has_custom_sql`. Published source: `additional_files` and, when needed, `published_datasource_stub_name` (intake 2b). `usage_context` may include unselected worksheets; use only the selected ones as evidence |
-| Source-only Tableau | No worksheet filter. Use `include_all_columns: true` if needed to keep source definitions; then trim to baseline scope and keep join keys |
-| Power BI | `include_tables` and, when narrowing measures, `include_measures`; keep dependent tables and measures. There is no sidecar or page-filter parameter |
-| Descriptions | With `generate_descriptions: true`, give Tableau a `model_name`; Power BI has a default. Descriptions don't add coverage |
+## File-Based Subject-Area Import (Power BI & Tableau)
 
-3. **Leave `target_database` / `target_schema` unset.** They rewrite every
-   base-table reference, not where the view deploys. Set them only for a
-   confirmed move of all sources to one schema. For mixed schemas, keep the FQNs
-   or map tables one by one with agent-studio's edit workflow. No remap brings
-   back a source dropped at parse time.
-4. **Read the result.** Parse the stringified `result`; check `success`,
-   `errors`, and `warnings` against the failure table in intake 2a. Export
-   returns `yaml_content`, not a Snowflake object.
-5. **Run the coverage gate** (`02-build/SKILL.md` 3c) on each named metric and
-   its dependencies.
-   - Power BI: also check `unsupported_measure_count`, `m_query_warnings`, and
-     `validation_warnings`. Zero unsupported measures doesn't prove coverage.
-   - Tableau may skip LOD and table calculations even when their definitions exist.
-   - Add `usage_context` evidence to the baseline record, but don't change the
-     confirmed scope without asking.
-6. **Save and check references** in agent-studio's order: Tableau checks them
-   before `sv-write`, Power BI after saving. Pass the deployment FQN as
-   `--source-object`.
-   - Confirm the source objects and required columns exist, including approved
-     remaps. Empty or skipped validation proves nothing.
-   - Ask before rebuilding unsupported logic or running custom-view DDL. Re-run
-     the gate after fixes.
-7. **Deploy** with `upload` / `sv-deploy` once the user authorizes it (reuse an
-   earlier authorization). Confirm the object exists.
+When a Subject Area groups multiple exported reports sharing Snowflake base tables:
 
-Keep YAML edits inside agent-studio. A blocked metric or a declined approval
-pauses that work; never move on to the agent quietly.
+1. **Import the anchor model first** (the report with the richest table and measure set from `batch_plan.json`).
+2. Delegate to **`agent-studio`**:
+   - **Power BI (`.pbit`, `.pbix`):** `import_powerbi` (`pbi_export`) with staged `file_path`, `semantic_model_name`, and exact `include_tables` / `include_measures` names from `pbi_analyze`.
+   - **Tableau (`.twb`, `.twbx`, `.tds`, `.tdsx`):** `import_tableau` (`tableau_export`) with staged `file_path`, `semantic_model_name`, `include_worksheets`, `extract_usage_context: true`, and `additional_files` + `published_datasource_stub_name` for paired `.tds`/`.tdsx` files. Confirm custom SQL handling if `has_custom_sql`.
+   - **Source-only Tableau (`.tds`, `.tdsx`):** omit worksheet filters, use `include_all_columns: true` if needed, then trim to approved scope while keeping join keys.
+3. **Fold in sibling reports:** Compare remaining reports in the same Subject Area against the anchor view's `DESCRIBE SEMANTIC VIEW` output. Add only missing tables, joins, and approved canonical metrics through `agent-studio`'s edit workflow so one Subject Area produces one governed Semantic View instead of N overlapping views.
+4. **Never pass large YAML payloads inline as bash arguments.** Write exported `yaml_content` to `/tmp/bulk_bi/<sa_id>/model.sv.yaml` first and pass it safely to `sv-write` with `--source-object <TARGET_DB>.<TARGET_SCHEMA>.<VIEW_NAME>`.
+5. **Keep deployment destination and base-table remap separate.** Leave `target_database` / `target_schema` unset unless the user confirmed physical tables moved to a different Snowflake schema (`reference/rules.md`).
+6. **Verify references and deploy.** Confirm every base table and required column exists in Snowflake, ask before rebuilding unsupported logic or running custom-view DDL, deploy explicitly via `upload` / `sv-deploy`, and confirm via `SHOW SEMANTIC VIEWS` and `DESCRIBE SEMANTIC VIEW`.
 
-If the same entity has different names or IDs across sources, flag it and scope
-the fix separately; importing metadata doesn't reconcile them.
+## Scope Boundaries
 
-## Done when
+- **Entity resolution is a separate track.** If the same customer, supplier, or product appears under different IDs across sources, flag it and scope that reconciliation separately.
+- **BI security rules do not migrate automatically.** Power BI RLS roles and Tableau user filters must be translated explicitly into Snowflake Row Access Policies or Masking Policies before sharing.
 
-- The Semantic View exists, the gate passes for the approved scope, and
-  exclusions are recorded.
-- Descriptions and synonyms are added. Result validation waits for Step 5.
-
-Return to `02-build/SKILL.md` 3d.
+Return to `02-build/SKILL.md` 2c to complete the coverage gate and read-back verification.

@@ -1,0 +1,73 @@
+{
+  "skill_name": "agentic-bi-migration",
+  "evals": [
+    {
+      "id": 1,
+      "name": "bulk-powerbi-folder-horizon-and-clustering",
+      "prompt": "Migrate all 15 Power BI .pbit files in ./exports/finance_bi into Snowflake Semantic Views, Cortex Agents, and dashboards.",
+      "expected_output": "Detects surface, runs Step 0 (encourages Horizon Catalog BI connector as optional faster path, scans existing Semantic Views and Cortex Agents), runs scripts/preflight_batch.py to cluster reports by shared base tables into Subject Areas, checks overlap with existing assets, and stops at ONE Batch Approval Gate before building.",
+      "expectations": [
+        "Detects Desktop/CLI vs Snowsight surface before staging or dispatching workers",
+        "Encourages Horizon Catalog metadata connector without blocking the file path",
+        "Scans existing Semantic Views and Cortex Agents before creating new ones",
+        "Clusters reports by shared Snowflake base tables rather than creating 15 duplicate Semantic Views",
+        "Stops at one Batch Approval Gate confirming Subject Areas, consolidation choices, target DB/schema, and batch page consent"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "existing-sv-and-agent-consolidation",
+      "prompt": "We already have ANALYTICS.FINANCE.FINANCE_CORE_SV and FINANCE_AGENT. Bring in 6 new Finance Power BI and Tableau dashboards without duplicating our semantic layer.",
+      "expected_output": "Preflight computes base-table overlap against FINANCE_CORE_SV and FINANCE_AGENT, recommends consolidate or reuse, asks the user explicitly whether to consolidate/extend, reuse as-is, or create new, and wires all migrated dashboards FROM SEMANTIC_VIEW(...).",
+      "expectations": [
+        "Matches incoming Subject Area tables against existing Semantic Views and Agents",
+        "Explicitly asks user to choose consolidate, reuse, or create_new",
+        "Inspects existing view before extending rather than blindly overwriting it",
+        "Wires every migrated dashboard to the consolidated/reused Semantic View"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "single-dashboard-guided-compatibility",
+      "prompt": "Run semantic layer discovery with a customer starting from one Executive Sales Tableau workbook (exec_sales.twbx) and a screenshot.",
+      "expected_output": "Routes to Single-Dashboard Mode (01-intake Path 1B), inspects XML locally before staging, checks existing Semantic Views, builds one Semantic View via agent-studio, creates one Cortex Agent, validates against the screenshot, and offers Step 5 front-end options.",
+      "expectations": [
+        "Triggers cleanly on legacy semantic-layer-discovery phrasing",
+        "Follows Single-Dashboard Path 1B without forcing bulk estate setup",
+        "Validates against the provided screenshot baseline",
+        "Requires explicit user choice before building Streamlit, App Runtime, or Dashboard front end"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "snowsight-sequential-fallback",
+      "prompt": "In Snowsight Workspaces (/workspace exists), migrate 8 Tableau workbooks in /workspace/bi_exports into dashboards and semantic views.",
+      "expected_output": "Detects surface=snowsight inline, stages via COPY FILES FROM snow://workspace (never cortex ws cp), and runs batch_state.py next-batch --limit 1 sequentially.",
+      "expectations": [
+        "Uses COPY FILES instead of PUT or cortex ws cp",
+        "Uses sequential --limit 1 waves in Snowsight",
+        "Isolates scratch directories under /tmp/bulk_bi/<slug>/"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "partial-blocker-needs-input-and-resume",
+      "prompt": "Migrate a folder of 5 Tableau workbooks where 1 workbook references a missing published datasource stub (sqlproxy).",
+      "expected_output": "Preflight flags B004 on the 1 blocked workbook and marks it needs_input with whats_missing and what_i_need while completing the other 4 workbooks, then resumes only the paused item without re-running completed work.",
+      "expectations": [
+        "Healthy workbooks complete without being blocked by 1 missing .tds",
+        "Blocked workbook records exact whats_missing and what_i_need in batch_manifest.json",
+        "Resume skips all completed Semantic Views, Agents, and dashboards"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "hard-negative-unrelated-sql-tuning",
+      "prompt": "Optimize this slow Snowflake warehouse query that joins three staging tables and spills to remote storage.",
+      "expected_output": "Does not trigger agentic-bi-migration (unrelated query performance tuning with no BI dashboards or semantic layer request).",
+      "expectations": [
+        "Does not load agentic-bi-migration or run preflight_batch.py"
+      ]
+    }
+  ]
+}

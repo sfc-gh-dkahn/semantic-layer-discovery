@@ -1,73 +1,59 @@
-# Step 3: Build the Semantic View
+# Step 2: Build, Reuse, or Consolidate Subject-Area Semantic Views
 
-Turn the confirmed baseline into a Semantic View, then check that every
-required metric made it. The file's contents decide the route; coverage decides
-whether the view is ready for an agent.
+Execute this phase **before** creating Cortex Agents or migrating dashboards. One canonical Semantic View set per Subject Area prevents duplicating definitions across sibling reports.
 
----
+## 2a. Route Each Subject Area by Approved Action
 
-## 3a. Pick the route
+Pull the next runnable Subject Areas from `<WORK_DIR>/batch_manifest.json` (`python3 <SKILL_DIR>/scripts/batch_state.py next-batch --manifest <WORK_DIR>/batch_manifest.json --phase semantic_views --limit 4`, or `--limit 1` in Snowsight). For single-dashboard mode, process the single baseline directly.
 
-| What intake found | Route | Next action |
+| Approved Action | What Exists | Route |
 |---|---|---|
-| Usable Tableau workbook/source or model-owning Power BI file; sources resolved | `02-build/import.md` | Import the selected scope, then the gate |
-| Missing published-source file, thin report, or unresolved required source | Intake 2b | Recover that piece; keep finished work |
-| Usable definitions, but required calculations won't convert | `02-build/import.md`, then the gate | Implement from the exact definitions with approval; don't try another file format |
-| Required tables not connected to Snowflake in the file, but confirmed in Snowflake (intake 1b-3) | `02-build/autopilot.md` for those tables | Build on the confirmed objects; carry over the file's formulas and page context |
-| No usable file, or an agreed metadata fallback | `02-build/autopilot.md` | Carry the baseline and any kept definitions; don't restart discovery |
+| **`reuse`** | Existing Semantic View already covers all Subject Area tables and approved metrics | Inspect via `DESCRIBE SEMANTIC VIEW <FQN>`, run coverage gate (2c), record `sv_status=completed` with existing FQN |
+| **`consolidate`** | Existing Semantic View overlaps core tables and needs additional tables or metrics from incoming reports | Read `02-build/import.md` § Consolidating an Existing Semantic View, extend through `agent-studio`, run coverage gate (2c), redeploy |
+| **`create_new` (Exported BI files / Connected BI)** | Staged `.pbit`, `.pbix`, `.twb`, `.twbx`, `.tds`, `.tdsx`, or Horizon Catalog BI metadata with Snowflake sources resolved | Read `02-build/import.md`, delegate to `agent-studio` (`import_powerbi`, `import_tableau`, or connected BI workflow) |
+| **`create_new` (No usable file / non-Snowflake source / fallback)** | Source tables confirmed in Snowflake without an importable BI model | Read `02-build/autopilot.md`, delegate to `agent-studio` `creation` workflow |
 
-- Prefer import when it keeps business definitions. A source-only Tableau file
-  is still worth importing.
-- A staged Tableau sidecar is used at export. Analyze doesn't merge it, so don't
-  wait for a re-analyzed workbook to show the relations.
-- If a required piece can't be supplied, agree on a fallback, a smaller scope,
-  or a pause before going on.
+Never create a duplicate Semantic View when the user approved `reuse` or `consolidate`.
 
-## 3b. Create it through agent-studio (REQUIRED)
+## 2b. Delegate Mechanics to `agent-studio` (REQUIRED)
 
-Invoke the **`agent-studio`** skill and let it create a real object; don't
-describe one:
-- Import: its `import_tableau` / `import_powerbi` workflows.
-- Metadata build: its `creation` workflow (Autopilot / fastgen).
-- Approved reuse of an existing view: inspect it through agent-studio and run
-  the gate below. Don't create a duplicate just to finish a step.
+Invoke the **`agent-studio`** skill for all Semantic View creation, editing, writing, and deployment. Never hand-write Semantic View definitions around `agent-studio`.
 
-Deploy only after the 3c gate passes (the import and Autopilot files show the
-order). Keep agent-studio's approval gates, including custom-view DDL and deployment.
-Step 3 is done only when `SHOW SEMANTIC VIEWS` / `DESCRIBE SEMANTIC VIEW`
-confirms the object; an export or saved YAML is not a deployed view. If an
-approval or input is missing, report a blocked run and its next action.
+Pass a structured context block into `agent-studio` so settled questions are not re-asked:
+- Subject Area name, member reports, anchor file, and companion `.tds`/`.tdsx` stage paths
+- Approved action (`reuse`, `consolidate`, or `create_new`) and existing Semantic View FQN (if any)
+- Deployment FQN (`<TARGET_DB>.<TARGET_SCHEMA>.<VIEW_NAME>`) kept strictly separate from base-table FQNs
+- Confirmed base-table remap (`target_database` / `target_schema`) ONLY if the user approved a physical source move
+- Canonical metric resolutions for any `B006` metric drift items
 
-## 3c. Required coverage gate (both routes, before the agent)
+## 2c. Metric-by-Metric Coverage Gate (Before Deployment)
 
-Check the candidate against the baseline record **metric by metric**, not by
-totals. For each required metric, record its definition source, target
-expression, dependencies, and status:
+Check the candidate Semantic View against the Subject Area's required metrics **metric by metric**, never by total counts alone:
 
 | Status | Action |
 |---|---|
-| Converted or implemented, sources resolved | Review grain, joins, filters, and dependencies; queue for Step 5 |
-| Definition found, translation unsupported | Keep the exact DAX/Tableau formula and its context. Explain the limit; ask approval to implement it in SQL through agent-studio, or to exclude it |
-| Definition or dependency missing | Ask for the specific formula, context, or source; or accept a smaller scope; or pause. Never infer a formula from a name |
+| Converted or implemented, sources resolved | Review grain, joins, filters, and dependencies — queue for Step 4 validation |
+| Definition found, translation unsupported (for example complex DAX, Tableau LOD, or table calculations) | Keep exact formula verbatim. Ask approval to implement it in SQL through `agent-studio`, or record it in the open-definitions list |
+| Definition or dependency missing | Record `needs_input` in `batch_manifest.json` (`whats_missing` + `what_i_need`) and continue other Subject Areas. Never infer a formula from a name |
 
-1. Read errors and warnings. Look for missing columns, filters, and
-   relationships, not just measures. A metric whose required dependency was
-   dropped is blocked, even if its name survived.
-2. Use query history to support recovery, never as proof on its own. Check any
-   candidate SQL against the definition, sources, grain, and filters
-   (`reference/rules.md` § Query history).
-3. **Pass only when** the approved scope has at least one answerable baseline
-   question and all its required metrics are implemented with dependencies
-   resolved. An empty export fails.
-4. If the user accepts a subset, keep the original metric list and record each
-   exclusion. "Unsupported" means "needs approved work", never "approximate it".
-5. Re-run the gate after every fix.
+A metric whose underlying column or join was dropped is blocked even if its name survived. An empty export fails the gate.
 
-## 3d. Before Step 4
+## 2d. Deploy & Verify Persistence by Read-Back (REQUIRED)
 
-- The gate passes for the approved scope and the object exists.
-- Add descriptions and synonyms in the business's own words.
-- Carry the baseline record, coverage table, and exclusions forward.
-- Don't certify yet; Step 5 validates first.
+1. Deploy explicitly via `agent-studio` (`upload` / `sv-deploy`) once authorized — an export or saved YAML is not a deployed view.
+2. **Read-back verification:** Confirm every deployed Semantic View exists and exposes the expected objects:
+   ```sql
+   SHOW SEMANTIC VIEWS LIKE '<VIEW_NAME>' IN SCHEMA <TARGET_DB>.<TARGET_SCHEMA>;
+   DESCRIBE SEMANTIC VIEW <TARGET_DB>.<TARGET_SCHEMA>.<VIEW_NAME>;
+   ```
+3. Update `<WORK_DIR>/batch_manifest.json` atomically:
+   ```bash
+   python3 <SKILL_DIR>/scripts/batch_state.py set-subject-area \
+     --manifest <WORK_DIR>/batch_manifest.json \
+     --id <SA_ID> --sv-status completed --semantic-view-fqn <FQN>
+   ```
+4. If a Subject Area fails after 3 bounded retries or hits a missing dependency, mark `sv_status=needs_input` or `sv_status=failed` with exact remediation notes and move to the next Subject Area.
 
-Then go to `03-agent/SKILL.md`.
+## Next Step
+
+Read `03-agent/SKILL.md` to create or consolidate one Cortex Agent per Subject Area.

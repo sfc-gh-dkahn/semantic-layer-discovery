@@ -1,95 +1,47 @@
-# Step 6 — Build the front end
+# Step 5: Reproduce Dashboards or Build Apps Over Subject-Area Semantic Views
 
-Package the validated Semantic View and agent into something the customer can
-open and share: a **Streamlit app**, an **App Runtime app**, or a **Dashboard**
-(Private Preview). Run this only after Step 5 passes. If Step 5 accepted a
-subset, build that subset and label its exclusions; don't present it as the
-full dashboard.
+Package each validated Subject Area's Semantic View and Cortex Agent into the customer's chosen front end: **Dashboards (`.dash`)**, **Streamlit apps**, or **App Runtime apps**. If Step 4 accepted a subset, build that subset and label its exclusions honestly.
 
-This file says *what* each option contains. Delegate the build to the skill
-for the option and the user's surface:
+In **Bulk Estate Mode**, the front-end choice, output directory, and batch page consent were already approved at the Batch Approval Gate in `01-intake/SKILL.md` — do not re-ask per file. Drive multi-report execution through `06-batch/SKILL.md`.
 
-| Option | Cortex Code Desktop / CLI | Snowsight (Cortex Code in Workspaces) |
+In **Single-Dashboard Mode**, if the user has not chosen a front end yet, run **5.0** below once and wait.
+
+## 5.0 Ask What to Build (Single-Dashboard Mode Only — REQUIRED STOP)
+
+Ask via `ask_user_question` and **wait**:
+
+| Option | Short Description | Delegate Skill (Desktop/CLI vs Snowsight) |
 |---|---|---|
-| **Streamlit app** | `developing-with-streamlit-in-snowflake` | `streamlit-in-workspaces` |
-| **App Runtime app** | `snowflake-apps` + `sar-actions-desktop` | `snowflake-apps` + `sar-actions-workspaces` |
-| **Dashboard** (Private Preview) | A CoWork Dashboard skill if one exists; otherwise recommend building in Snowsight Cortex Code (6b-3) | `dashboard` (Snowsight Workspaces) |
+| **Dashboard (`.dash`)** | KPI tiles, charts, and filters on the Semantic View in CoWork with follow-up Q&A (Private Preview) | `dashboard` (or recommend Snowsight Workspaces if unavailable on Desktop) |
+| **Streamlit app** | Python app with KPI tiles and embedded Cortex Agent chat, fastest custom UI | `developing-with-streamlit-in-snowflake` / `streamlit-in-workspaces` |
+| **App Runtime app** | Full web app (Next.js) with custom UI, forms, and multi-step workflows | `snowflake-apps` + `sar-actions-desktop` / `sar-actions-workspaces` |
+| **Explain each one to me** | Compare the three options, then ask again | — |
+| **Not now** | Skip Step 5 | — |
 
-Tell the surface from your skills list (`sar-actions-desktop` vs
-`sar-actions-workspaces`). If you can't, ask.
+**STOP — Wait for choice (Single-Dashboard Mode only).**
+**Resume rule:** Upon selection, build immediately without re-asking settled Semantic View or Agent FQNs.
 
----
+## 5a. Bulk & Single Dashboard Reproduction (`.dash`)
 
-## 6.0 Ask what to build (REQUIRED stop)
+For every report queued in `batch_manifest.json` (`phase = dashboards`):
 
-Before any Step 6 work, ask with ask_user_question and **wait**:
+1. **Confirm the Subject Area Semantic View is deployed:** Read `semantic_view_fqn` from the report's `subject_area_id` in `batch_manifest.json` and run `DESCRIBE SEMANTIC VIEW <FQN>`. Never migrate a dashboard directly against raw base tables when its Subject Area Semantic View exists.
+2. **Delegate to the `dashboard` skill** (or Snowsight Workspaces `dashboard` skill if Desktop lacks one), passing:
+   - The report source (staged BI file + any companion `.tds`/`.tdsx`, or Horizon Catalog reference)
+   - The deployed **Subject Area Semantic View FQN** explicitly
+   - The target `.dash` output path (`<DASH_OUT_DIR>/<report_slug>.dash`)
+   - An isolated per-report scratch directory (`/tmp/bulk_bi/<report_slug>/`) so concurrent workers never collide
+   - The batch-approved page/worksheet list and matched `screenshot_path` (if present) for layout, color, and filter fidelity
+3. **Non-blocking ambiguity handling:** If a report visual references a field missing from the Semantic View or an unresolved source, record `status=needs_input` (`whats_missing` + `what_i_need`) in `batch_manifest.json` rather than guessing or silently substituting another column.
 
-> Your Semantic View and Cortex Agent are validated. What would you like to build
-> on top of them?
+## 5b. Streamlit & App Runtime Options
 
-| Option | Short description to show |
-|---|---|
-| **Streamlit app** | Python app with KPI tiles and an agent chat. Fastest to build. |
-| **App Runtime app** | Full web app (Next.js) with a custom UI, forms, and multi-step workflows. |
-| **Dashboard** | KPI tiles, charts, and filters on the view, stored as one `.dash` file. Built in Snowsight, viewed in CoWork, where users can ask follow-up questions on any tile. Private Preview. |
-| **Explain each one to me** | Compare the three, then ask again. |
-| **Not now** | Skip Step 6. |
+- **Streamlit app:** One file (`streamlit_app.py` plus `environment.yml` if needed) containing Header, Baseline KPIs (`FROM SEMANTIC_VIEW(...)`), Ask-the-Agent chat (`st.chat_input` calling the Cortex Agent REST API), and Suggested Verified Query buttons. Use the active Streamlit-in-Snowflake session with no hard-coded credentials.
+- **App Runtime app:** Same four sections in Next.js through `snowflake-apps`, server-side Snowflake calls only, no credentials in client code.
 
-- **Explain each one to me:** show the comparison below, then ask again without
-  this option.
-- **Not now:** build nothing. Note in the wrap-up that Step 6 can run later.
-- **A build option:** go to 6a.
+## 5c. Universal Semantic-View Grounding Rule (REQUIRED for All Front Ends)
 
-| | Streamlit app | App Runtime app | Dashboard (Private Preview) |
-|---|---|---|---|
-| **Best for** | Analysts and business users who want KPIs plus a chat | Teams that need a branded, custom app for wider use | Business users who want curated numbers and to ask "why?" about them |
-| **Agent chat** | Yes | Yes | Yes |
-| **Code** | Python, one file | TypeScript / Next.js project | One `.dash` file; each tile is a SQL query |
-| **Effort** | Low | Higher | Lowest |
-| **Where it runs** | Streamlit in Snowflake | Snowflake App Runtime (SPCS) | Built in Snowsight Workspaces; viewed in CoWork |
-
-## 6a. Gather inputs (reuse; ask only for gaps)
-
-1. Semantic View FQN (Step 3).
-2. Cortex Agent FQN (Step 4); apps only.
-3. Deployment `database.schema` and warehouse.
-4. Roles to grant (never PUBLIC).
-
-## 6b. What each option contains
-
-### 6b-1. Streamlit app
-
-One file (`streamlit_app.py`, plus `environment.yml` if needed):
-
-| Section | What it shows | Source |
-|---|---|---|
-| **Header** | Baseline dashboard name, agent name, owner | Steps 1, 4, 5 |
-| **Baseline KPIs** | The 3-5 baseline metrics as `st.metric` tiles + 1-2 charts, mirroring the baseline dashboard (use the screenshot if provided) | `SELECT * FROM SEMANTIC_VIEW(<sv> METRICS ... DIMENSIONS ...)` |
-| **Ask the agent** | `st.chat_input` / `st.chat_message` chat that calls the Cortex Agent and shows its text, generated SQL (in an expander), and result tables | Cortex Agent REST API (`/api/v2/databases/<db>/schemas/<schema>/agents/<agent>:run`) |
-| **Suggested questions** | Buttons for the baseline questions / Verified Queries that pre-fill the chat | Step 5 |
-
-Use the active Streamlit-in-Snowflake session; no hard-coded credentials.
-
-### 6b-2. App Runtime app
-
-The same four sections as a Next.js app. Let `snowflake-apps` choose the layout
-and the server-side Snowflake calls. KPIs come from `SEMANTIC_VIEW(...)`, chat
-from the Cortex Agent REST API. No credentials in client-side code.
-
-### 6b-3. Dashboard (Private Preview)
-
-The same baseline KPIs as a `.dash` file in Snowsight Workspaces, deployed to
-CoWork, where users ask the agent about it: scorecard tiles for the KPIs, 1-2
-chart tiles, and filters for the baseline dimensions (wired into tile SQL with
-`{{ filter('name') }}`). Confirm the account is enrolled in the Private Preview
-first. On Desktop / CLI, use a CoWork Dashboard skill if one exists; otherwise
-recommend building it in Snowsight Cortex Code. See
-[Dashboards in Snowflake Cowork](https://docs.snowflake.com/en/LIMITEDACCESS/cowork-dashboards).
-
-### Rules for all three
-
-**Every query reads the Semantic View (REQUIRED):** every tile, chart, filter,
-and drop-down list.
+Every tile, chart, table, filter, and dropdown list across `.dash`, Streamlit, and App Runtime builds **must query the Subject Area Semantic View**:
 
 ```sql
 SELECT * FROM SEMANTIC_VIEW(
@@ -100,36 +52,21 @@ SELECT * FROM SEMANTIC_VIEW(
 );
 ```
 
-- Query only the view: no base tables, other views, helper tables,
-  `CREATE TABLE AS`, or cached extracts. If a number can't come from the view,
-  add it to the view (Step 3) and re-validate.
-- Filter value lists come from `SEMANTIC_VIEW(... DIMENSIONS ...)`. In
-  Dashboards, use a **query**-backed filter with that SQL, not a column-backed
-  one. The CoWork docs suggest a pre-aggregated or Dynamic Table for slow
-  filters; don't. Raise the slowness with the customer instead.
-- Chat goes through the agent, which uses the same view.
+- Query only the Semantic View — no raw base tables, helper tables, `CREATE TABLE AS`, or cached extracts. If a metric is missing, add it to the Subject Area Semantic View (Step 2) and re-validate, or record it explicitly as unconverted (`batch_state.py set-report --add-unconverted`).
+- Populate filter dropdowns with query-backed SQL reading `SEMANTIC_VIEW(... DIMENSIONS ...)`.
+- Route conversational chat through the Subject Area's Cortex Agent.
 
-This keeps security, metric definitions, and numbers identical to what Step 5
-validated.
+## 5d. Deploy, Verify, and Update Manifest
 
-## 6c. Deploy and verify
+1. Deploy through the chosen skill and grant access only to named roles (never `PUBLIC`).
+2. Confirm every SQL query in the generated `.dash` or app file references `FROM SEMANTIC_VIEW(...)` and verify deployment (`SHOW STREAMLITS`, `SHOW APPLICATION SERVICES`, or `.dash` validation).
+3. Update `<WORK_DIR>/batch_manifest.json`:
+   ```bash
+   python3 <SKILL_DIR>/scripts/batch_state.py set-report \
+     --manifest <WORK_DIR>/batch_manifest.json \
+     --id <REPORT_ID> --status completed --dashboard-path "<OUT_PATH>"
+   ```
 
-1. Deploy through the chosen skill. Dashboards go to CoWork for the 6a roles,
-   never PUBLIC.
-2. Grant the 6a roles access.
-3. Check the source: every SQL statement in the app files or `.dash` file uses
-   `FROM SEMANTIC_VIEW(...)`. Fix any that don't.
-4. Open it: KPI numbers match Step 5, and (apps) one suggested question gets a
-   correct agent answer.
-5. Give the customer the URL and the source files.
+## Next Step
 
-## Done when
-
-(Only if the customer chose a build option.)
-
-- It exists and loads: `SHOW STREAMLITS`, `SHOW APPLICATION SERVICES`, or the
-  dashboard opens in CoWork for a recipient role.
-- Every query uses `FROM SEMANTIC_VIEW(...)`.
-- KPI numbers match Step 5.
-- Apps: the chat answers a baseline question through the agent.
-- The named roles have access; the customer has the source.
+In Bulk Estate Mode, return to `06-batch/SKILL.md` to render the updated status card and dispatch the next wave.
