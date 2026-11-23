@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+bi_migration_run/
+.DS_Store
